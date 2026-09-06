@@ -1,5 +1,8 @@
 global-exclude .DS_Store
 
+# Ignore legacy setuptools-scm output in existing source checkouts.
+exclude patch/_version.py
+
 recursive-include patch/resources *.json *.yml
 recursive-include patch/queries *.scm
 recursive-include patch/docs *.md

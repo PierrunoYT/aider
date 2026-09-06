@@ -367,7 +367,8 @@ missing CI artifact gate remain unresolved.
 **Recommendation:** Require a release-tag predicate, use a protected environment, adopt PyPI trusted publishing/OIDC, SHA-pin third-party actions, and publish only tested artifacts.
 
 **Status:** The Docker release workflow was removed. The PyPI workflow still
-supports manual dispatch and needs the recommended release gates.
+supports manual dispatch and needs the recommended release gates. Tag-triggered
+publishing has been removed; only an explicit manual dispatch can publish.
 
 **Confidence:** Medium
 
@@ -461,7 +462,7 @@ supports manual dispatch and needs the recommended release gates.
 
 ---
 
-### [Medium] Manual untagged release builds can derive an invalid project version
+### Resolved: [Medium] Manual untagged builds derived an inconsistent project version
 
 **Location:** `pyproject.toml:44-49`; `patch/__init__.py:3-18`; `.github/workflows/release.yml:3-34`
 
@@ -470,6 +471,11 @@ supports manual dispatch and needs the recommended release gates.
 **Impact:** A manual release can upload metadata that sorts below real Aider releases and disagrees with runtime version reporting.
 
 **Recommendation:** Require a valid release tag and fail the build if SCM-derived and declared safe versions are inconsistent. A fallback version alone is weaker than preventing untagged publication.
+
+**Status:** Runtime and package metadata now read the same explicit version from
+`patch/__init__.py`, starting at Patch `0.1.0`. SCM-derived versions and the inherited
+version floor have been removed. Manual publishing still requires version and
+artifact review; this resolves version disagreement, not release authorization.
 
 **Confidence:** High for manual untagged builds
 

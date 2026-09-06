@@ -2,7 +2,6 @@
 
 import argparse
 import datetime
-import os
 import re
 import subprocess
 import sys
@@ -162,13 +161,6 @@ def main():
         print(f"Running: {' '.join(cmd)}")
         if not dry_run:
             subprocess.run(cmd, check=True)
-
-    # Remove patch/_version.py if it exists
-    version_file = "patch/_version.py"
-    if os.path.exists(version_file):
-        print(f"Removing {version_file}")
-        if not dry_run:
-            os.remove(version_file)
 
 
 if __name__ == "__main__":

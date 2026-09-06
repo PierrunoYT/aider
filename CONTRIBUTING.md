@@ -205,8 +205,24 @@ package and pytest, not every optional extra. Some browser and scraper tests use
 live services or runtime installers, so a full run requires network access.
 
 Formatting and lint checks run through `.github/workflows/pre-commit.yml`.
-PyPI publishing is handled by `.github/workflows/release.yml`.
+PyPI publishing is manual-only through `.github/workflows/release.yml` (`workflow_dispatch`).
+Pushing a branch or tag does not publish a package.
 Docker builds are manual; there are no automatic Docker or GitHub Pages deployments.
+
+#### Preparing a release
+
+`patch/__init__.py` is the single version source for the CLI and built package.
+Set the intended release version there, date the release section in `CHANGELOG.md`,
+and leave an `Unreleased` section for subsequent changes. Tags do not set the version.
+Run the test suite, pre-commit, and `python -m build` from a clean build directory.
+Install the wheel in an isolated environment outside the checkout and compare
+`python -m patch --version` with `importlib.metadata.version("patch-code")`.
+
+Only manually dispatch the PyPI workflow after reviewing the version and artifacts;
+dispatch publishes immediately using the configured PyPI credentials.
+`scripts/versionbump.py` commits, tags, and pushes both release and development
+versions; it is not a local preparation command and must not be run without
+authorization for those Git actions.
 
 #### Writing Tests
 

@@ -5,12 +5,15 @@ For the inherited release history, see [the previous changelog](HISTORY.md).
 
 ## Unreleased
 
+## 0.1.0 — 2026-09-06
+
 ### Added
 
 - Added repository-wide agent guidance in `AGENTS.md` and a contributor policy requiring documentation review and updates after every change, including changelog entries and preservation of upstream history.
 
 ### Changed
 
+- Prepared the first Patch release as `0.1.0`. Runtime and distribution metadata now share the version in `patch/__init__.py`, independent of Git tags or inherited Aider version floors.
 - Replaced the inherited website with seven packaged Markdown guides in `patch/docs/`, preserving `/help <question>` and linking runtime help to retained GitHub docs and anchors. A separate help cache avoids reusing the former website index. The browser uses an emoji favicon instead of a remote site asset.
 - Moved the two historical Aider datasets used by benchmark tools into `benchmark/data/` without changing results, and redirected plot output to `tmp.benchmarks/`. Updated the README, contributor guide, agent guidance, benchmark instructions, and stale audit statuses for the site removal and recent fixes.
 - Replaced inherited-site links in release history with upstream GitHub source links, preserving Aider attribution. Replaced fixture domains with `example.org` consistently in the input and expected output without altering whitespace.
@@ -38,6 +41,7 @@ For the inherited release history, see [the previous changelog](HISTORY.md).
 
 ### Removed
 
+- Removed automatic PyPI publishing on tag pushes. The release workflow now runs only through an explicit manual dispatch.
 - Deleted the inherited website, Jekyll build configuration, website-only generators for badges, blame, icons, audio, and inherited history, and their unused development dependencies. Help and documentation URL tests now run without remote model downloads or HTTP requests; packaged-doc changes are covered by CI.
 - Removed all analytics collection. The inherited Mixpanel and PostHog project keys belonged to upstream Aider, so Patch now ships no analytics destination at all: no events are sent, and the opt-in prompt no longer appears, including for the random subset of users upstream would have asked. The instrumentation remains usable for your own telemetry — the PostHog client is only created when you pass `--analytics-posthog-project-api-key`, and `--analytics-log` still writes events to a local file without sending them. Automatic exception capture, which bypassed the redaction applied to normal events, is now off.
 - Removed six GitHub Actions workflows: automated issue processing, daily PyPI version checks on Linux and Windows, GitHub Pages deployment, and Docker build and release publishing. Retained Linux and Windows tests, pre-commit checks, and PyPI releases; Docker sources remain available for manual builds.
