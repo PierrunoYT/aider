@@ -3,29 +3,64 @@ name: PyPI Release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
+    # A protected environment, so publishing needs whatever approval and branch
+    # rules the repository configures for it
+    environment: pypi
+    permissions:
+      contents: read
+      # Trusted publishing: PyPI mints a short-lived token for this workflow,
+      # so no long-lived API token is stored in the repository
+      id-token: write
     steps:
+    # Third-party actions are pinned to a commit, not a mutable tag
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.3.1
       with:
         fetch-depth: 0
 
+    - name: Refuse to publish from an untagged ref
+      run: |
+        version=$(python -c "import re, pathlib;
+        text = pathlib.Path('patch/__init__.py').read_text()
+        print(re.search(r'__version__ = \"([^\"]+)\"', text).group(1))")
+        echo "Declared version: $version"
+        tag="v$version"
+        if ! git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
+          echo "::error::No tag $tag. Tag the release commit before publishing."
+          exit 1
+        fi
+        if [ "$(git rev-parse "refs/tags/$tag^{commit}")" != "$(git rev-parse HEAD)" ]; then
+          echo "::error::Tag $tag does not point at this commit."
+          exit 1
+        fi
+
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: 3.x
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build setuptools wheel twine importlib-metadata==7.2.1
+        pip install build
 
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Build
+      run: python -m build
+
+    - name: Check that the artifact runs outside the checkout
       run: |
-        python -m build
-        twine upload dist/*
+        python -m venv "$RUNNER_TEMP/release-venv"
+        "$RUNNER_TEMP/release-venv/bin/python" -m pip install --upgrade pip
+        "$RUNNER_TEMP/release-venv/bin/python" -m pip install -c requirements.txt dist/*.whl
+        cd "$RUNNER_TEMP"
+        "$RUNNER_TEMP/release-venv/bin/python" -m patch --version
+        "$RUNNER_TEMP/release-venv/bin/python" -m patch --exit --yes --no-git --no-check-update
+
+    - name: Publish
+      uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

@@ -505,7 +505,7 @@ missing CI artifact gate remain unresolved.
 
 ---
 
-### [Medium] Release workflows can publish manually selected refs without artifact gates
+### Resolved: [Medium] Release workflows can publish manually selected refs without artifact gates
 
 **Location:** `.github/workflows/release.yml`
 
@@ -514,6 +514,17 @@ missing CI artifact gate remain unresolved.
 **Impact:** A mistaken invocation or compromised maintainer can publish from an unintended ref or overwrite Docker `latest`.
 
 **Recommendation:** Require a release-tag predicate, use a protected environment, adopt PyPI trusted publishing/OIDC, SHA-pin third-party actions, and publish only tested artifacts.
+
+**Status:** Resolved as recommended, for the one workflow that remains: the Docker
+release workflow was removed earlier. `release.yml` refuses to publish unless a
+`vX.Y.Z` tag matching `patch/__init__.py` exists and points at the commit being
+built, runs in the protected `pypi` environment, publishes through PyPI trusted
+publishing with `id-token: write` instead of a stored token, pins
+`actions/checkout`, `actions/setup-python`, and `pypa/gh-action-pypi-publish` to
+commit SHAs, and installs the built wheel into a fresh environment outside the
+checkout and runs it before uploading. The PyPI side of trusted publishing and the
+environment protection rules have to be configured in the project's PyPI and
+GitHub settings; `CONTRIBUTING.md` says what to set.
 
 **Status:** The Docker release workflow was removed. The PyPI workflow still
 supports manual dispatch and needs the recommended release gates. Tag-triggered

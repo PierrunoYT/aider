@@ -253,8 +253,19 @@ Run the test suite, pre-commit, and `python -m build` from a clean build directo
 Install the wheel in an isolated environment outside the checkout and compare
 `python -m patch --version` with `importlib.metadata.version("patch-code")`.
 
+Tag the release commit `vX.Y.Z`, matching `patch/__init__.py`, and push the tag
+before dispatching. The workflow refuses to publish unless that tag exists and
+points at the commit being built, then builds, installs the wheel in a fresh
+environment outside the checkout, runs it, and only then uploads.
+
+Publishing uses PyPI trusted publishing rather than a stored token: configure
+`patch-code` on PyPI with this repository, the `PyPI Release` workflow, and the
+`pypi` environment, and protect that environment in the repository settings with
+whatever review the project wants. No `PYPI_API_TOKEN` secret is needed, and any
+remaining one should be revoked.
+
 Only manually dispatch the PyPI workflow after reviewing the version and artifacts;
-dispatch publishes immediately using the configured PyPI credentials.
+dispatch publishes immediately.
 `scripts/versionbump.py` commits, tags, and pushes both release and development
 versions; it is not a local preparation command and must not be run without
 authorization for those Git actions.

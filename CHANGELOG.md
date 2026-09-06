@@ -60,6 +60,10 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Gate the manual PyPI release workflow: it publishes only from a commit carrying
+  the matching `vX.Y.Z` tag, runs in a protected environment, uses PyPI trusted
+  publishing instead of a stored token, pins its actions to commit SHAs, and
+  installs and runs the built wheel before uploading.
 - Keep the test suite from changing the machine it runs on. A plain `pytest` run
   no longer reaches third-party sites or installs packages: tests that do are
   marked `network` and `installer`, and a fixture fails any other test that tries
