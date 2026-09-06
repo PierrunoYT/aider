@@ -2,6 +2,8 @@ import argparse
 import base64
 import hashlib
 import os
+import socket
+import time
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -15,6 +17,7 @@ from patch.onboarding import (
     generate_pkce_codes,
     offer_openrouter_oauth,
     select_default_model,
+    start_openrouter_oauth_flow,
     try_to_select_default_model,
 )
 
@@ -431,6 +434,40 @@ class TestOnboarding(unittest.TestCase):
 
     # --- More complex test for start_openrouter_oauth_flow (simplified) ---
     # This test focuses on the successful path, mocking heavily
+
+
+class TestOAuthServerShutdown(unittest.TestCase):
+    """The callback listener must release its port however the flow ends."""
+
+    def port_is_free(self, port):
+        # No SO_REUSEADDR: this asks whether anything still holds the port
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.bind(("localhost", port))
+            except OSError:
+                return False
+
+        return True
+
+    def wait_for_free_port(self, port):
+        for _ in range(50):
+            if self.port_is_free(port):
+                return True
+            time.sleep(0.1)
+
+        return False
+
+    def test_the_port_is_released_after_a_timeout(self):
+        port = find_available_port()
+
+        with patch("patch.onboarding.find_available_port", return_value=port):
+            with patch("patch.onboarding.webbrowser.open"):
+                # Let the wait for the browser callback run out immediately
+                with patch("patch.onboarding.CALLBACK_TIMEOUT_MINUTES", 0.01):
+                    result = start_openrouter_oauth_flow(DummyIO(), DummyAnalytics())
+
+        self.assertIsNone(result)
+        self.assertTrue(self.wait_for_free_port(port), "the callback port stayed bound")
 
 
 if __name__ == "__main__":

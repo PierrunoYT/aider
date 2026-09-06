@@ -357,7 +357,7 @@ change is hardening rather than a fix.
 
 ---
 
-### [Medium] OAuth callback listener can survive timeout
+### Resolved: [Medium] OAuth callback listener can survive timeout
 
 **Location:** `patch/onboarding.py:266-336`
 
@@ -366,6 +366,14 @@ change is hardening rather than a fix.
 **Impact:** The daemon listener can remain bound until another request arrives or the process exits, causing resource leakage and possible failure on a subsequent attempt.
 
 **Recommendation:** Set a finite server timeout, signal shutdown in `finally`, close the server, and verify thread termination. Add timeout, interruption, and successful-shutdown tests.
+
+**Status:** Resolved as recommended. The callback server sets `httpd.timeout`, so
+`handle_request()` returns regularly and notices a shutdown request even when no
+browser callback arrives. The flow sets the shutdown event in a `finally`, joins
+the thread with a real timeout, and warns if it is still running. Reverting just
+those two changes leaves the port bound after the wait expires, which
+`tests/basic/test_onboarding.py::TestOAuthServerShutdown` detects; the interrupt
+path shares the same `finally`.
 
 **Confidence:** High
 

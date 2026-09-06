@@ -55,6 +55,9 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Release the local OpenRouter sign-in port when the browser wait runs out. The
+  callback server stayed bound until the process exited, which could block a later
+  attempt.
 - Write edited files by renaming a complete temporary file over the old one, so a
   write that fails part-way leaves the previous file intact instead of an empty or
   half-written one. Permissions are preserved, symlinks still update their target,

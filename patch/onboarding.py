@@ -5,7 +5,6 @@ import os
 import secrets
 import socketserver
 import threading
-import time
 import webbrowser
 from urllib.parse import parse_qs, urlparse
 
@@ -210,6 +209,14 @@ def exchange_code_for_key(code, code_verifier, io):
         return None
 
 
+# How long to wait for the browser callback, how often the callback server
+# checks whether it was asked to stop, and how long the flow waits for its
+# thread to finish afterwards.
+CALLBACK_TIMEOUT_MINUTES = 5
+POLL_SECONDS = 0.5
+SHUTDOWN_SECONDS = 5
+
+
 # Function to start the OAuth flow
 def start_openrouter_oauth_flow(io, analytics):
     """Initiates the OpenRouter OAuth PKCE flow using a local server."""
@@ -267,14 +274,14 @@ def start_openrouter_oauth_flow(io, analytics):
         nonlocal server_error
         try:
             with socketserver.TCPServer(("localhost", port), OAuthCallbackHandler) as httpd:
+                # Return from handle_request() regularly, so a shutdown request
+                # is noticed even when no browser callback ever arrives
+                httpd.timeout = POLL_SECONDS
                 io.tool_output(f"Temporary server listening on {callback_url}", log_only=True)
                 server_started.set()  # Signal that the server is ready
                 # Wait until shutdown is requested or timeout occurs (handled by main thread)
                 while not shutdown_server.is_set():
                     httpd.handle_request()  # Handle one request at a time
-                    # Add a small sleep to prevent busy-waiting if needed,
-                    # though handle_request should block appropriately.
-                    time.sleep(0.1)
                 io.tool_output("Shutting down temporary server.", log_only=True)
         except Exception as e:
             server_error = f"Failed to start or run temporary server: {e}"
@@ -312,7 +319,7 @@ def start_openrouter_oauth_flow(io, analytics):
     io.tool_output()
     print(auth_url)
 
-    MINUTES = 5
+    MINUTES = CALLBACK_TIMEOUT_MINUTES
     io.tool_output(f"\nWaiting up to {MINUTES} minutes for you to finish in the browser...")
     io.tool_output("Use Control-C to interrupt.")
 
@@ -329,11 +336,12 @@ def start_openrouter_oauth_flow(io, analytics):
         io.tool_warning("\nOAuth flow interrupted.")
         analytics.event("oauth_flow_failed", provider="openrouter", reason="user_interrupt")
         interrupted = True
-        # Ensure the server thread is signaled to shut down
+    finally:
+        # Release the listening port however this ends, including on timeout
         shutdown_server.set()
-
-    # Join the server thread to ensure it's cleaned up
-    server_thread.join(timeout=1)
+        server_thread.join(timeout=SHUTDOWN_SECONDS)
+        if server_thread.is_alive():
+            io.tool_warning("The temporary authentication server did not shut down.")
 
     if interrupted:
         return None  # Return None if interrupted by user
