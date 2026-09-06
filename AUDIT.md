@@ -540,7 +540,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ---
 
-### [Low] Current pre-commit lint job has a deterministic failure
+### Resolved: [Low] Current pre-commit lint job has a deterministic failure
 
 **Location:** `patch/onboarding.py:229-233`; `.pre-commit-config.yaml:11-15`; `.flake8`
 
@@ -551,6 +551,8 @@ requests.get(url, headers=headers, timeout=(5, 30))
 **Evidence:** The independent audit ran Flake8 and observed exactly this one fatal warning.
 
 **Recommendation:** Remove the unused `server_error` declaration from `do_GET`; retain it only in the closure that assigns it.
+
+**Status:** Resolved. The unused declaration was removed and `flake8` now reports no findings on the tree.
 
 **Confidence:** High
 
