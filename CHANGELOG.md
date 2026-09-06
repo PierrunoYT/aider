@@ -22,6 +22,10 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Security
 
+- Regenerate the dependency locks, moving the packages carrying known advisories:
+  GitPython 3.1.61, Pillow 12.3.0, urllib3 2.7.0, Starlette 1.6.0, soupsieve 2.9.2,
+  and LiteLLM 1.83.0. Dependabot now watches the locks and the workflow actions
+  weekly.
 - Require both `*** Begin Patch` and `*** End Patch` before applying a
   `patch`-format response, so one that was cut off is sent back to the model
   instead of half applied. Prose before or after the patch is now ignored rather

@@ -911,6 +911,8 @@ class TestMain(TestCase):
                 # Configure the mock to avoid the TypeError
                 mock_model.return_value.info = {}
                 mock_model.return_value.name = "gpt-4"  # Add a string name
+                mock_model.return_value.weak_model.name = "gpt-4o-mini"
+                mock_model.return_value.editor_model.name = "gpt-4"
                 mock_model.return_value.validate_environment.return_value = {
                     "missing_keys": [],
                     "keys_in_environment": [],
@@ -1364,6 +1366,8 @@ class TestMain(TestCase):
                 # Setup mock model instance to simulate accepts_settings attribute
                 mock_instance = MockModel.return_value
                 mock_instance.name = "test-model"
+                mock_instance.weak_model.name = "test-weak-model"
+                mock_instance.editor_model.name = "test-editor-model"
                 mock_instance.accepts_settings = ["reasoning_effort"]
                 mock_instance.validate_environment.return_value = {
                     "missing_keys": [],

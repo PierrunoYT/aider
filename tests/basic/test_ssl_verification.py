@@ -47,6 +47,8 @@ class TestSSLVerification(TestCase):
             # A concrete name: a MagicMock name makes every startswith() check
             # true, which sends the sanity check off to install boto3
             mock_model.return_value.name = "gpt-4o"
+            mock_model.return_value.weak_model.name = "gpt-4o-mini"
+            mock_model.return_value.editor_model.name = "gpt-4o"
             mock_model.return_value.validate_environment.return_value = {
                 "missing_keys": [],
                 "keys_in_environment": [],

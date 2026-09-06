@@ -1,5 +1,6 @@
 import os
 import shutil
+import stat
 import struct
 from unittest import mock
 
@@ -152,10 +153,17 @@ def test_bare_repository(create_repo, mock_io, tmp_path):
     mock_io.tool_output.assert_not_called()
 
 
+def remove_readonly(func, path, _exc):
+    """Windows marks Git object files read-only, so clear that and retry."""
+
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+
 def test_sanity_check_repo_with_corrupt_repo(create_repo, mock_io):
     repo_path, repo = create_repo
     # Simulate a corrupt repository by removing the .git directory
-    shutil.rmtree(os.path.join(repo_path, ".git"))
+    shutil.rmtree(os.path.join(repo_path, ".git"), onerror=remove_readonly)
 
     # Create the mock 'repo' object with GitError
     git_error = GitError("Unable to read git repository, it may be corrupt?")

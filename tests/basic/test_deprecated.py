@@ -48,7 +48,12 @@ class TestDeprecated(TestCase):
         for flag in deprecated_flags:
             mock_tool_warning.reset_mock()
 
-            with patch("patch.models.Model"), self.subTest(flag=flag):
+            with patch("patch.models.Model") as mock_model, self.subTest(flag=flag):
+                # Concrete names: a MagicMock name passes every startswith()
+                # check, which sends the sanity check off to install boto3
+                mock_model.return_value.name = "gpt-4o"
+                mock_model.return_value.weak_model.name = "gpt-4o-mini"
+                mock_model.return_value.editor_model.name = "gpt-4o"
                 main(
                     [flag, "--no-git", "--exit", "--yes"], input=DummyInput(), output=DummyOutput()
                 )
@@ -78,7 +83,10 @@ class TestDeprecated(TestCase):
         mock_offer_url.return_value = False
         # Test that the warning uses the model alias if available
         with patch("patch.models.MODEL_ALIASES", {"gpt4": "gpt-4-0613"}):
-            with patch("patch.models.Model"):
+            with patch("patch.models.Model") as mock_model:
+                mock_model.return_value.name = "gpt-4-0613"
+                mock_model.return_value.weak_model.name = "gpt-4o-mini"
+                mock_model.return_value.editor_model.name = "gpt-4o"
                 main(
                     ["--4", "--no-git", "--exit", "--yes"], input=DummyInput(), output=DummyOutput()
                 )

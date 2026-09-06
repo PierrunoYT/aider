@@ -1,0 +1,29 @@
+version: 2
+
+# Nothing was watching the pinned dependencies, so security fixes went unnoticed
+# for months. These updates open pull requests against the compiled locks and the
+# workflow actions; regenerate the locks with ./scripts/pip-compile.sh rather than
+# merging a hand-edited pin.
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+
+  - package-ecosystem: pip
+    directory: /requirements
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies

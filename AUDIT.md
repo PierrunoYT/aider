@@ -256,7 +256,7 @@ sentinel, a missing begin sentinel, non-patch content, and surrounding prose.
 
 ## Medium Priority Findings
 
-### [Medium] Known-vulnerable dependency versions are shipped
+### Partially resolved: [Medium] Known-vulnerable dependency versions are shipped
 
 **Location:** `requirements.txt`; `requirements/common-constraints.txt`
 
@@ -267,6 +267,18 @@ sentinel, a missing begin sentinel, non-patch content, and surrounding prose.
 **Evidence:** Both independent scans found vulnerable resolved packages. Exact advisory counts should not be treated as stable; package/version/advisory identity should drive remediation.
 
 **Recommendation:** Triage by reachable feature, upgrade direct dependencies first, regenerate constraints, run the complete suite, and add an audit gate with documented expiring suppressions. Do not force incompatible transitive upgrades independently of their parent frameworks.
+
+**Status:** Mostly resolved, and tracked in issue #1302. The locks were regenerated
+with `./scripts/pip-compile.sh --upgrade` and validated by installing them into a
+fresh environment and running the whole suite there, which is also how the mocked
+model names and the read-only Git objects in the tests were found. The packages the
+advisories named moved to GitPython 3.1.61, Pillow 12.3.0, urllib3 2.7.0, Starlette
+1.6.0, soupsieve 2.9.2, and LiteLLM 1.83.0. `.github/dependabot.yml` now watches the
+locks and the workflow actions weekly, which is what was missing.
+Still open: LiteLLM stops at 1.83.0 because `importlib-metadata<8.0.0`, kept for an
+old twine bug, holds it back; 1.84.0 carries the proxy-server authentication bypass
+fix, which Patch does not run, and going further is a large jump that deserves its
+own validation. There is no audit gate in CI yet.
 
 **Confidence:** High for versions; Medium for application-specific exploitability
 
