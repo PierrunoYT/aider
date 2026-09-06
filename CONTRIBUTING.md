@@ -66,7 +66,7 @@ cd patch
 
 It is recommended to create a virtual environment outside of the repository to keep your development environment isolated.
 
-#### Using `venv` (Python 3.9 and later)
+#### Using `venv` (Python 3.10 and later)
 
 ```
 python -m venv /path/to/venv
@@ -171,7 +171,7 @@ The built documentation will be available in the `patch/website/_site` directory
 
 ### Python Compatibility
 
-Patch supports Python 3.10 and later. When contributing code, ensure compatibility with these supported Python versions.
+Patch supports Python 3.10 through 3.14, as declared by `requires-python` in `pyproject.toml`. When contributing code, ensure compatibility with all of these supported Python versions.
 
 ### Code Style
 
@@ -183,7 +183,7 @@ The project does not use type hints.
 
 ### Testing
 
-The project uses [pytest](https://docs.pytest.org/en/latest/) for running unit tests. The test files are located in the `patch/tests` directory and follow the naming convention `test_*.py`.
+The project uses [pytest](https://docs.pytest.org/en/latest/) for running unit tests. The test files are located in the `tests` directory and follow the naming convention `test_*.py`.
 
 #### Running Tests
 
@@ -204,10 +204,10 @@ pytest tests/basic/test_coder.py::TestCoder::test_specific_case
 
 The project uses GitHub Actions for continuous integration. The testing workflows are defined in the following files:
 
-- `.github/workflows/ubuntu-tests.yml`: Runs tests on Ubuntu for Python versions 3.9 through 3.12.
-- `.github/workflows/windows-tests.yml`: Runs that on Windows
+- `.github/workflows/ubuntu-tests.yml`: Runs tests on Ubuntu for Python 3.10 through 3.14.
+- `.github/workflows/windows-tests.yml`: Runs the same tests on Windows for the same Python versions.
 
-These workflows are triggered on push and pull request events to the `main` branch, ignoring changes to the `patch/website/**` and `README.md` files.
+These workflows are triggered on push and pull request events to the `main` branch, ignoring changes to `patch/website/**`, `README.md`, and `HISTORY.md`.
 
 Formatting and lint checks run through `.github/workflows/pre-commit.yml`.
 PyPI publishing is handled by `.github/workflows/release.yml`.
@@ -215,21 +215,21 @@ Docker builds and website builds are manual; there are no automatic Docker or Gi
 
 #### Writing Tests
 
-When contributing new features or making changes to existing code, ensure that you write appropriate tests to maintain code coverage. Follow the existing patterns and naming conventions used in the `patch/tests` directory.
+When contributing new features or making changes to existing code, ensure that you write appropriate tests to maintain code coverage. Follow the existing patterns and naming conventions used in the `tests` directory.
 
-If you need to mock or create test data, consider adding it to the test files or creating separate fixtures or utility functions within the `patch/tests` directory.
+If you need to mock or create test data, consider adding it to the test files or creating separate fixtures or utility functions within the `tests` directory.
 
 #### Test Requirements
 
 The project uses `pytest` as the testing framework, which is installed as a development dependency. To install the development dependencies, run the following command:
 
 ```
-pip install -r requirements-dev.txt
+pip install -r requirements/requirements-dev.txt
 ```
 
 ### Managing Dependencies
 
-When introducing new dependencies, make sure to add them to the appropriate `requirements.in` file (e.g., `requirements.in` for main dependencies, `requirements-dev.in` for development dependencies). Then, run the following commands to update the corresponding `requirements.txt` file:
+When introducing new dependencies, make sure to add them to the appropriate `.in` file under `requirements/` (e.g., `requirements/requirements.in` for main dependencies, `requirements/requirements-dev.in` for development dependencies). Then, run the following commands to update the corresponding `requirements.txt` file:
 
 ```
 pip install uv

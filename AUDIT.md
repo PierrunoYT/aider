@@ -428,7 +428,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ---
 
-### [Medium] Optional extras cannot resolve on supported Python 3.10
+### Resolved: [Medium] Optional extras cannot resolve on supported Python 3.10
 
 **Location:** `pyproject.toml:20,32-36`; `requirements/requirements-dev.txt:151`; `requirements/requirements-help.txt:209`; `requirements/requirements-browser.txt:65`; `requirements/python-compat.in`
 
@@ -437,6 +437,8 @@ requests.get(url, headers=headers, timeout=(5, 30))
 **Impact:** Installing `patch-code[dev]`, `[help]`, or `[browser]` fails on a declared supported Python version. CI installs the base project rather than extras and misses this.
 
 **Recommendation:** Preserve environment markers when compiling each extra and add resolver/install jobs for every supported Python version and extra combination.
+
+**Status:** Resolved. The locks are now compiled with universal resolution from Python 3.10 so markers are preserved, and `tests/basic/test_requirements.py` checks pin consistency across base and extras for every supported Python version on Linux and Windows.
 
 **Confidence:** High
 
@@ -484,7 +486,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ---
 
-### [Low] Contributor documentation contradicts current configuration
+### Resolved: [Low] Contributor documentation contradicts current configuration
 
 **Location:** `CONTRIBUTING.md:156-170,187-216`; `pyproject.toml:20`; `pytest.ini:4-8`
 
@@ -493,6 +495,8 @@ requests.get(url, headers=headers, timeout=(5, 30))
 **Impact:** Contributors can use unsupported versions, run invalid commands, or place tests incorrectly.
 
 **Recommendation:** Update and periodically validate documentation against project metadata, workflows, and actual paths.
+
+**Status:** Resolved. The guide now states Python 3.10–3.14, points at the `tests` directory, and uses the real `requirements/` paths.
 
 **Confidence:** High
 
@@ -535,6 +539,8 @@ requests.get(url, headers=headers, timeout=(5, 30))
 **Impact:** A fork user accepting an upgrade replaces this checkout's distribution with upstream Aider. If the fork is published, it collides with upstream package and console-script identity. Analytics and project provenance may be surprising despite the README's fork notice.
 
 **Recommendation:** Either explicitly remain an unmodified downstream mirror and document upstream update/telemetry behavior, or choose distinct package/update/analytics identity before distributing fork-specific builds.
+
+**Status:** Partially resolved. Package identity, the homepage, and the version-check/upgrade path are now Patch-owned. Telemetry is not: `patch/analytics.py:56` still ships upstream Aider's PostHog project key, so opted-in analytics are reported to the upstream project. This is now disclosed in `patch/website/docs/more/analytics.md`, but the default destination still needs a Patch-owned project or removal before distributing builds.
 
 **Confidence:** High
 
