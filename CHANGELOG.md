@@ -21,6 +21,7 @@ For the inherited release history, see [the previous changelog](HISTORY.md).
 
 ### Fixed
 
+- Regenerated the documentation that is derived from the CLI parser, which had not been refreshed when the `--check-update` help text changed. The options reference, YAML and `.env` guides, and the sample configuration assets now match `patch --help`. Also refreshed the supported-languages table, which was missing repo-map support for bash.
 - Replaced links that presented upstream Aider's Discord as the Patch community with links to this repository's issue tracker, across the website navigation, footer, homepage, and help include. Relabelled the LLM leaderboards link as Aider's, and pointed the homepage release-notes link at this repository's own history page.
 - Removed the fabricated "Patch AI LLC" entity and `patch.chat` domain introduced by the rebrand. The inherited contributor agreement and privacy policy are restored to upstream Aider AI LLC and labelled as retained upstream documents, the FAQ explains that Patch is an unaffiliated fork with no legal entity, and the cookie banner no longer scopes itself to a nonexistent domain. Repaired the remaining `patch-ai/patch` links in the analytics documentation.
 - Documented that Patch still ships upstream Aider's PostHog project key, so opted-in analytics are reported to the upstream project, and pointed the opt-in prompt at Patch's own analytics documentation instead of the upstream page. Cleared the inherited website analytics key so the documentation site cannot report to upstream either.

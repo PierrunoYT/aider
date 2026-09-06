@@ -574,7 +574,7 @@ Default: False
 Environment variable: `PATCH_JUST_CHECK_UPDATE`  
 
 ### `--check-update`
-Check for new patch versions on launch  
+Show available Patch updates on launch (checks cached for 24 hours; no auto-install)  
 Default: True  
 Environment variable: `PATCH_CHECK_UPDATE`  
 Aliases:

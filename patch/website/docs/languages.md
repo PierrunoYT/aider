@@ -62,9 +62,9 @@ cog.out(get_supported_languages_md())
 | asm                  | .asm                 |          |   ✓    |
 | asm                  | .s                   |          |   ✓    |
 | astro                | .astro               |          |   ✓    |
-| bash                 | .bash                |          |   ✓    |
-| bash                 | .sh                  |          |   ✓    |
-| bash                 | .zsh                 |          |   ✓    |
+| bash                 | .bash                |    ✓     |   ✓    |
+| bash                 | .sh                  |    ✓     |   ✓    |
+| bash                 | .zsh                 |    ✓     |   ✓    |
 | beancount            | .bean                |          |   ✓    |
 | bibtex               | .bib                 |          |   ✓    |
 | bicep                | .bicep               |          |   ✓    |

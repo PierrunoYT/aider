@@ -310,7 +310,7 @@
 ## Check for updates and return status in the exit code
 #just-check-update: false
 
-## Check for new patch versions on launch
+## Show available Patch updates on launch (checks cached for 24 hours; no auto-install)
 #check-update: true
 
 ## Show release notes on first run of new version (default: None, ask user)
