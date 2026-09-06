@@ -258,7 +258,7 @@ markdown-it-py==4.2.0
     # via rich
 markupsafe==3.0.3
     # via jinja2
-marshmallow==3.26.2
+marshmallow==4.3.1
     # via dataclasses-json
 matplotlib==3.10.9 ; python_full_version < '3.11'
     # via -r requirements/requirements-dev.in
