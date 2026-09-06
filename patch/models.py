@@ -963,7 +963,9 @@ class Model(ModelSettings):
             }
 
             url = "https://api.github.com/copilot_internal/v2/token"
-            res = requests.get(url, headers=headers)
+            # Connect and read timeouts, so a stalled network cannot hold up
+            # every model request behind this token refresh
+            res = requests.get(url, headers=headers, timeout=(5, 30))
             if res.status_code != 200:
                 safe_headers = {k: v for k, v in headers.items() if k != "Authorization"}
                 token_preview = github_token[:5] + "..." if len(github_token) >= 5 else github_token

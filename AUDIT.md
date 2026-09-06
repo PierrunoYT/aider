@@ -420,7 +420,7 @@ including the early returns on a transcription error. `tempfile.mktemp()` is gon
 
 ---
 
-### Partially resolved: [Medium] Core network requests have no timeout
+### Resolved: [Medium] Core network requests have no timeout
 
 **Location:** `patch/models.py:934-983`; `patch/versioncheck.py:64-95`
 
@@ -434,8 +434,13 @@ including the early returns on a transcription error. `tempfile.mktemp()` is gon
 requests.get(url, headers=headers, timeout=(5, 30))
 ```
 
-**Status:** The PyPI update check now uses `timeout=3` and has regression tests.
-The Copilot request still needs timeout hardening.
+**Status:** Resolved. The PyPI update check uses `timeout=3` and has regression
+tests, and the Copilot token exchange now passes `timeout=(5, 30)`, so a stalled
+network can no longer hold up every model request behind the token refresh.
+`tests/basic/test_models.py::TestCopilotToken` checks the timeout is passed and
+that a timeout is raised rather than swallowed. The other outbound calls, in
+`onboarding.py`, `openrouter.py`, and `models.py`, already had timeouts, and
+`scrape.py` uses httpx, which times out by default.
 
 **Confidence:** High
 

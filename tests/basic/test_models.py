@@ -1,5 +1,8 @@
+import os
 import unittest
 from unittest.mock import ANY, MagicMock, patch
+
+import requests
 
 from patch.models import (
     ANTHROPIC_BETA_HEADER,
@@ -594,6 +597,39 @@ class TestModels(unittest.TestCase):
                 self.assertEqual(model.editor_model_name, editor_name)
                 self.assertEqual(model.editor_model.name, editor_name)
                 self.assertIn("reasoning_effort", model.accepts_settings)
+
+
+class TestCopilotToken(unittest.TestCase):
+    """The token refresh sits in front of every request, so it must time out."""
+
+    def setUp(self):
+        self.env = patch.dict(
+            "os.environ",
+            {"GITHUB_COPILOT_TOKEN": "token"},
+            clear=False,
+        )
+        self.env.start()
+        self.addCleanup(self.env.stop)
+        os.environ.pop("OPENAI_API_KEY", None)
+
+        self.headers = {
+            "Editor-Version": "Patch/1.0",
+            "Copilot-Integration-Id": "vscode-chat",
+        }
+
+    def test_the_request_has_a_timeout(self):
+        response = MagicMock(status_code=200)
+        response.json.return_value = {"token": "copilot-token"}
+
+        with patch("requests.get", return_value=response) as mock_get:
+            Model("gpt-4o").github_copilot_token_to_open_ai_key(self.headers)
+
+        self.assertEqual(mock_get.call_args.kwargs["timeout"], (5, 30))
+
+    def test_a_timeout_is_raised_rather_than_hanging(self):
+        with patch("requests.get", side_effect=requests.exceptions.Timeout("timed out")):
+            with self.assertRaises(requests.exceptions.Timeout):
+                Model("gpt-4o").github_copilot_token_to_open_ai_key(self.headers)
 
 
 if __name__ == "__main__":
