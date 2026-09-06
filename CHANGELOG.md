@@ -55,6 +55,8 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Delete voice recordings once the turn ends. A WAV recording was left in the
+  temporary directory, and a failed transcription left both formats behind.
 - Keep the OpenRouter key saved by the sign-in flow readable only by you.
   `~/.patch` is created as `0700` and `oauth-keys.env` as `0600`, and existing
   permissions are tightened before the key is appended.

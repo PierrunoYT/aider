@@ -400,7 +400,7 @@ file, and tightening an existing `0644` file in a `0755` directory.
 
 ---
 
-### [Medium] Voice recordings are not deleted
+### Resolved: [Medium] Voice recordings are not deleted
 
 **Location:** `patch/voice.py:116-180`
 
@@ -409,6 +409,12 @@ file, and tightening an existing `0644` file in a `0755` directory.
 **Impact:** Sensitive voice recordings accumulate in the temporary directory and consume disk.
 
 **Recommendation:** Use `TemporaryDirectory` or secure named temporary files and delete every generated file in `finally`. Test all success and failure paths.
+
+**Status:** Resolved with a `TemporaryDirectory`. `raw_record_and_transcribe()`
+creates one and hands it to `record_and_transcribe_in()`, so the WAV, any converted
+MP3, and anything else written there are removed however the recording ends,
+including the early returns on a transcription error. `tempfile.mktemp()` is gone.
+`tests/basic/test_voice.py` covers the successful and failing paths.
 
 **Confidence:** High
 

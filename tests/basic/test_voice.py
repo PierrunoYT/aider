@@ -1,5 +1,6 @@
 import os
 import queue
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -101,3 +102,39 @@ def test_record_and_transcribe_device_error():
         ):
             result = voice.record_and_transcribe()
             assert result is None
+
+
+def record_with(recording_dirs, **kwargs):
+    """Run one recording, remembering the directory it used."""
+
+    def remember(temp_dir, history, language):
+        recording_dirs.append(temp_dir)
+        Path(temp_dir, "recording.wav").write_bytes(b"audio")
+
+        if "result" in kwargs:
+            return kwargs["result"]
+
+        raise kwargs["error"]
+
+    with patch("patch.voice.sf", MagicMock()):
+        voice = Voice()
+        with patch.object(voice, "record_and_transcribe_in", side_effect=remember):
+            return voice.raw_record_and_transcribe(None, None)
+
+
+def test_the_recording_is_deleted_after_transcribing():
+    dirs = []
+
+    result = record_with(dirs, result="hello")
+
+    assert result == "hello"
+    assert dirs and not Path(dirs[0]).exists()
+
+
+def test_the_recording_is_deleted_when_transcribing_fails():
+    dirs = []
+
+    with pytest.raises(RuntimeError):
+        record_with(dirs, error=RuntimeError("transcription failed"))
+
+    assert dirs and not Path(dirs[0]).exists()

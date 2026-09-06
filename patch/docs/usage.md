@@ -51,7 +51,8 @@ repository map and file discovery. Adjust `--map-tokens` to control map size;
 
 Use `/web <URL>` to read a page, `/add` for a supported image, and `/voice` for
 microphone transcription. Voice requires an audio device and transcription provider
-credentials. Use `/paste` for clipboard content and `/editor` to write a prompt
+credentials; the recording is sent to that provider and deleted locally once the
+turn ends. Use `/paste` for clipboard content and `/editor` to write a prompt
 in your editor. `/multiline-mode` toggles multiline input.
 
 `--watch-files` reacts to AI comment markers in source files. Only enable it in

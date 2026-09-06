@@ -114,9 +114,15 @@ class Voice:
             return
 
     def raw_record_and_transcribe(self, history, language):
+        # Recordings live in a directory that goes away however this returns,
+        # so no audio is left behind on disk
+        with tempfile.TemporaryDirectory(prefix="patch-recording-") as temp_dir:
+            return self.record_and_transcribe_in(temp_dir, history, language)
+
+    def record_and_transcribe_in(self, temp_dir, history, language):
         self.q = queue.Queue()
 
-        temp_wav = tempfile.mktemp(suffix=".wav")
+        temp_wav = os.path.join(temp_dir, "recording.wav")
 
         try:
             sample_rate = int(self.sd.query_devices(self.device_id, "input")["default_samplerate"])
@@ -152,7 +158,7 @@ class Voice:
         filename = temp_wav
         if use_audio_format != "wav":
             try:
-                new_filename = tempfile.mktemp(suffix=f".{use_audio_format}")
+                new_filename = os.path.join(temp_dir, f"recording.{use_audio_format}")
                 audio = AudioSegment.from_wav(temp_wav)
                 audio.export(new_filename, format=use_audio_format)
                 os.remove(temp_wav)
@@ -172,9 +178,6 @@ class Voice:
             except Exception as err:
                 print(f"Unable to transcribe {filename}: {err}")
                 return
-
-        if filename != temp_wav:
-            os.remove(filename)
 
         text = transcript.text
         return text
