@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="patch/website/assets/logo.svg" alt="Patch logo" width="300">
+  <img src="assets/logo.svg" alt="PATCH wordmark" width="300">
 </p>
 
 <h1 align="center">Patch</h1>
@@ -98,6 +98,15 @@ variables from `AIDER_*` to `PATCH_*` before using them with Patch.
 - [Troubleshooting](patch/website/docs/troubleshooting.md)
 - [Patch changelog](CHANGELOG.md)
 - [Contributing](CONTRIBUTING.md)
+
+## Logos
+
+- [Wide PATCH wordmark](assets/logo.svg) — 2048 × 686, lettering only.
+- [Square P icon](assets/logo-icon.svg) — 2048 × 2048.
+
+Both SVGs use mint on charcoal and scale without requiring fonts.
+The root `assets/` folder contains the logos; keep the website copies in
+`patch/website/assets/` in sync when updating them.
 
 ## License and attribution
 
