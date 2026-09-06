@@ -573,6 +573,21 @@ class Coder:
         self.abs_root_path_cache[key] = res
         return res
 
+    def path_in_root(self, full_path):
+        """Does this absolute path stay inside the project root?
+
+        `abs_root_path()` resolves `../` segments and drops the root entirely for
+        an absolute path, so a model can name a file anywhere on the filesystem.
+        """
+
+        try:
+            root = Path(utils.safe_abs_path(self.root))
+            Path(full_path).relative_to(root)
+        except ValueError:
+            return False
+
+        return True
+
     fences = all_fences
     fence = fences[0]
 
@@ -2198,6 +2213,14 @@ class Coder:
         if full_path in self.abs_fnames:
             self.check_for_dirty_commit(path)
             return True
+
+        if not self.path_in_root(full_path):
+            # Only files the user added themselves are editable outside the
+            # project, and those took the branch above.
+            self.io.tool_error(
+                f"Skipping edits to {path}, which is outside the project: {full_path}"
+            )
+            return
 
         if self.repo and self.repo.git_ignored_file(path):
             self.io.tool_warning(f"Skipping edits to {path} that matches gitignore spec.")

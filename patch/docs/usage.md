@@ -14,6 +14,11 @@ Only add files needed for the task: adding everything costs tokens and can confu
 the model. The repository map supplies related context without adding every file.
 Use `/tokens` to inspect context usage.
 
+Model-requested edits stay inside the project. A path that resolves outside it,
+through `../` or an absolute path, is refused, and Patch prints the resolved
+location. Files you added yourself with `/add` or on the command line remain
+editable wherever they live.
+
 ## Large repositories
 
 Start Patch in the repository and add only the files you expect to edit.

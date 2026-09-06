@@ -10,10 +10,9 @@ An independent Claude Opus 5 re-audit was reconciled into this report. It confir
 
 1. Patch-format moves can overwrite arbitrary writable paths without destination authorization.
 2. Malformed whole-file and patch responses can be applied rather than rejected, risking silent data loss.
-3. Model-originated paths are not contained to the project root.
 
-Three of the original five have since been fixed on `main`, each with regression
-tests, and their findings below carry the details:
+These have since been fixed on `main`, each with regression tests, and their
+findings below carry the details:
 
 - Repository-local `.patch.conf.yml`, `.env`, and model settings no longer supply
   the settings that run commands or steer API traffic; `--trust-repo-config` opts
@@ -21,6 +20,7 @@ tests, and their findings below carry the details:
 - The repo map cache moved out of the repository and off pickle (issue #1349).
 - The GUI binds to loopback and gives each browser session its own state and coder
   (issue #1352).
+- Model-requested edits are contained to the project root (issue #1351).
 
 Additional material risks include known-vulnerable dependencies, filesystem mutation during dry-run validation, incorrect accounting after partial edit failures, OAuth and voice resource leaks, and non-hermetic CI.
 
@@ -122,7 +122,7 @@ Add regression tests for absolute paths, `../` traversal, symlinks, read-only fi
 
 ---
 
-### [High] General edit authorization permits paths outside the project root
+### Resolved: [High] General edit authorization permits paths outside the project root
 
 **Location:** `patch/coders/base_coder.py:566-574,2191-2236`; comparison implementation at `patch/commands.py:1511-1518`
 
@@ -133,6 +133,14 @@ Add regression tests for absolute paths, `../` traversal, symlinks, read-only fi
 **Evidence:** The Opus audit reproduced complete writes through `../` and absolute paths in no-Git mode, and a complete relative escape in Git mode with `--no-auto-commits`.
 
 **Recommendation:** Reject model-originated out-of-root paths unless the resolved path was explicitly supplied by the user as an editable file. At minimum, require `explicit_yes_required=True` for any external target and display the resolved absolute path. Centralize the check in `allowed_to_edit()` so all edit formats inherit it.
+
+**Status:** Resolved along the first recommendation. `allowed_to_edit()` refuses any
+resolved path outside the root, reporting the resolved location, and every edit
+format inherits the check. A file the user added themselves is still editable
+wherever it lives, because that case returns before the containment check.
+`tests/basic/test_coder.py::TestCoderRootContainment` covers `../` traversal, an
+absolute path, traversal that lands back inside, a user-added external file, and an
+end-to-end write attempt under `--yes-always`.
 
 **Confidence:** High
 

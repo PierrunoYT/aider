@@ -17,6 +17,11 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Security
 
+- Refuse model-requested edits to paths that resolve outside the project, whether
+  through `../` segments or an absolute path, and report the resolved location.
+  Files you added yourself stay editable wherever they are. Previously such a path
+  was treated as an ordinary new or non-chat file, which `--yes-always` approved
+  automatically.
 - Ignore the settings in a repository's own `.patch.conf.yml`, `.env`, and model
   settings files that run commands, carry credentials, steer API traffic, redirect
   telemetry, write outside the repository, or answer prompts. Cloning a repository

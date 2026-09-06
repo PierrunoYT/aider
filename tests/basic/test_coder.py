@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -1432,6 +1433,93 @@ This command will print 'Hello, World!' to the console."""
                     # Verify that editor coder was NOT created or run
                     # (because user rejected the changes)
                     mock_editor.run.assert_not_called()
+
+
+class TestCoderRootContainment(unittest.TestCase):
+    """A model must not name paths outside the project."""
+
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+        self.webbrowser_patcher = patch("patch.io.webbrowser.open")
+        self.webbrowser_patcher.start()
+        self.addCleanup(self.webbrowser_patcher.stop)
+
+    def make_coder(self, fnames=None):
+        io = MagicMock()
+        io.confirm_ask = MagicMock(return_value=True)
+        io.dry_run = False
+        return Coder.create(self.GPT35, None, io, fnames=fnames, use_git=False)
+
+    def outside_path(self, repo_dir, name):
+        """A path just outside the repository, cleaned up after the test."""
+
+        path = Path(repo_dir).parent / f"{name}-{uuid.uuid4().hex}.txt"
+        self.addCleanup(path.unlink, missing_ok=True)
+
+        return path
+
+    def test_parent_traversal_is_refused(self):
+        with GitTemporaryDirectory() as repo_dir:
+            outside = self.outside_path(repo_dir, "outside")
+            outside.write_text("keep\n")
+
+            coder = self.make_coder()
+
+            self.assertFalse(coder.allowed_to_edit(f"../{outside.name}"))
+            self.assertEqual(outside.read_text(), "keep\n")
+            self.assertNotIn(str(outside), str(coder.abs_fnames))
+
+    def test_absolute_path_outside_the_root_is_refused(self):
+        with GitTemporaryDirectory() as repo_dir:
+            outside = self.outside_path(repo_dir, "absolute")
+
+            coder = self.make_coder()
+
+            self.assertFalse(coder.allowed_to_edit(str(outside)))
+            self.assertFalse(outside.exists())
+
+    def test_traversal_that_lands_back_inside_is_allowed(self):
+        with GitTemporaryDirectory() as repo_dir:
+            Path(repo_dir, "sub").mkdir()
+
+            coder = self.make_coder()
+
+            self.assertTrue(coder.allowed_to_edit("sub/../inside.txt"))
+
+    def test_file_the_user_added_outside_the_root_stays_editable(self):
+        with GitTemporaryDirectory() as repo_dir:
+            outside = self.outside_path(repo_dir, "added-outside")
+            outside.write_text("mine\n")
+
+            coder = self.make_coder(fnames=[str(outside)])
+
+            self.assertTrue(coder.allowed_to_edit(str(outside)))
+
+    def test_edits_outside_the_root_are_not_applied(self):
+        with GitTemporaryDirectory() as repo_dir:
+            outside = self.outside_path(repo_dir, "target")
+            outside.write_text("keep\n")
+
+            # A real IO, so the edit would reach the filesystem, and --yes-always,
+            # which is what makes the ordinary confirmation useless here.
+            io = InputOutput(yes=True, pretty=False, fancy_input=False)
+            coder = Coder.create(self.GPT35, "whole", io, use_git=False)
+
+            def mock_send(*args, **kwargs):
+                coder.partial_response_content = f"""Here you go:
+
+../{outside.name}
+```
+pwned
+```
+"""
+                coder.partial_response_function_call = dict()
+                return []
+
+            coder.send = mock_send
+            coder.run(with_message="hi")
+
+            self.assertEqual(outside.read_text(), "keep\n")
 
 
 if __name__ == "__main__":
