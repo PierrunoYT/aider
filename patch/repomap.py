@@ -1,4 +1,6 @@
 import colorsys
+import hashlib
+import json
 import math
 import os
 import random
@@ -11,7 +13,7 @@ from collections import Counter, defaultdict, namedtuple
 from importlib import resources
 from pathlib import Path
 
-from diskcache import Cache
+from diskcache import Cache, Disk
 from grep_ast import TreeContext, filename_to_lang
 from pygments.lexers import guess_lexer_for_filename
 from pygments.token import Token
@@ -31,6 +33,15 @@ Tag = namedtuple("Tag", "rel_fname fname line name kind".split())
 
 SQLITE_ERRORS = (sqlite3.OperationalError, sqlite3.DatabaseError, OSError)
 
+# Raised when a cache entry cannot be decoded. UnicodeDecodeError and
+# json.JSONDecodeError are both ValueErrors.
+CACHE_DECODE_ERRORS = (ValueError, TypeError)
+
+try:
+    from diskcache.core import MODE_PICKLE
+except ImportError:  # pragma: no cover - depends on the installed diskcache
+    MODE_PICKLE = 4
+
 
 CACHE_VERSION = 3
 if USING_TSL_PACK:
@@ -39,9 +50,91 @@ if USING_TSL_PACK:
 UPDATING_REPO_MAP_MESSAGE = "Updating repo map"
 
 
-class RepoMap:
-    TAGS_CACHE_DIR = f".patch.tags.cache.v{CACHE_VERSION}"
+class JsonDisk(Disk):
+    """diskcache serializer that never unpickles.
 
+    diskcache pickles every value that is not a primitive, so reading a crafted
+    or corrupt entry would run reduction code before Patch could inspect it.
+    Keys and values are stored as JSON instead, and an entry that is pickled or
+    does not decode raises, which the caller turns into a cache miss.
+    """
+
+    def put(self, key):
+        return super().put(json.dumps(key, sort_keys=True))
+
+    def get(self, key, raw):
+        return json.loads(super().get(key, raw))
+
+    def store(self, value, read, **kwargs):
+        if read:
+            return super().store(value, read, **kwargs)
+
+        return super().store(json.dumps(value), read, **kwargs)
+
+    def fetch(self, mode, filename, value, read):
+        if mode == MODE_PICKLE:
+            raise ValueError("Refusing to unpickle a tags cache entry")
+
+        data = super().fetch(mode, filename, value, read)
+        if read or data is None:
+            return data
+
+        return json.loads(data)
+
+
+def get_tags_cache_dir():
+    """Directory holding every repository's tags cache.
+
+    Set PATCH_TAGS_CACHE_DIR to relocate it, for read-only homes or tests.
+    """
+
+    override = os.environ.get("PATCH_TAGS_CACHE_DIR", "").strip()
+    if override:
+        return Path(override)
+
+    return Path.home() / ".patch" / "caches" / f"tags.v{CACHE_VERSION}"
+
+
+def get_tags_cache_path(root):
+    """Tags cache for `root`, keyed by a hash of its canonical path.
+
+    The cache is kept per user rather than in the repository, where a malicious
+    checkout could ship its own cache for Patch to read.
+    """
+
+    try:
+        canonical = str(Path(root).resolve())
+    except OSError:
+        canonical = os.path.abspath(root)
+
+    digest = hashlib.sha256(canonical.encode("utf-8", "surrogatepass")).hexdigest()
+
+    return get_tags_cache_dir() / digest[:32]
+
+
+def tags_from_cache(data):
+    """Rebuild tags from a cache entry, or None if it is not what we stored."""
+
+    if not isinstance(data, list):
+        return None
+
+    tags = []
+    for item in data:
+        if not isinstance(item, (list, tuple)) or len(item) != len(Tag._fields):
+            return None
+
+        rel_fname, fname, line, name, kind = item
+        if not all(isinstance(field, str) for field in (rel_fname, fname, name, kind)):
+            return None
+        if not isinstance(line, int) or isinstance(line, bool):
+            return None
+
+        tags.append(Tag(rel_fname, fname, line, name, kind))
+
+    return tags
+
+
+class RepoMap:
     warned_files = set()
 
     def __init__(
@@ -183,7 +276,7 @@ class RepoMap:
         if isinstance(getattr(self, "TAGS_CACHE", None), dict):
             return
 
-        path = Path(self.root) / self.TAGS_CACHE_DIR
+        path = get_tags_cache_path(self.root)
 
         # Try to recreate the cache
         try:
@@ -192,7 +285,7 @@ class RepoMap:
                 shutil.rmtree(path)
 
             # Try to create new cache
-            new_cache = Cache(path)
+            new_cache = Cache(path, disk=JsonDisk)
 
             # Test that it works
             test_key = "test"
@@ -215,9 +308,9 @@ class RepoMap:
         self.TAGS_CACHE = dict()
 
     def load_tags_cache(self):
-        path = Path(self.root) / self.TAGS_CACHE_DIR
+        path = get_tags_cache_path(self.root)
         try:
-            self.TAGS_CACHE = Cache(path)
+            self.TAGS_CACHE = Cache(path, disk=JsonDisk)
         except SQLITE_ERRORS as e:
             self.tags_cache_error(e)
 
@@ -230,6 +323,23 @@ class RepoMap:
         except FileNotFoundError:
             self.io.tool_warning(f"File not found error: {fname}")
 
+    def read_tags_cache(self, cache_key):
+        """Read a cache entry, returning None for anything we cannot decode."""
+
+        try:
+            return self.TAGS_CACHE.get(cache_key)  # Issue #1308
+        except SQLITE_ERRORS as e:
+            self.tags_cache_error(e)
+        except CACHE_DECODE_ERRORS:
+            # The entry is corrupt, or was planted by something else. Never
+            # trust it, just recompute the tags.
+            return None
+
+        try:
+            return self.TAGS_CACHE.get(cache_key)
+        except CACHE_DECODE_ERRORS:
+            return None
+
     def get_tags(self, fname, rel_fname):
         # Check if the file is in the cache and if the modification time has not changed
         file_mtime = self.get_mtime(fname)
@@ -237,18 +347,12 @@ class RepoMap:
             return []
 
         cache_key = fname
-        try:
-            val = self.TAGS_CACHE.get(cache_key)  # Issue #1308
-        except SQLITE_ERRORS as e:
-            self.tags_cache_error(e)
-            val = self.TAGS_CACHE.get(cache_key)
+        val = self.read_tags_cache(cache_key)
 
-        if val is not None and val.get("mtime") == file_mtime:
-            try:
-                return self.TAGS_CACHE[cache_key]["data"]
-            except SQLITE_ERRORS as e:
-                self.tags_cache_error(e)
-                return self.TAGS_CACHE[cache_key]["data"]
+        if isinstance(val, dict) and val.get("mtime") == file_mtime:
+            tags = tags_from_cache(val.get("data"))
+            if tags is not None:
+                return tags
 
         # miss!
         data = list(self.get_tags_raw(fname, rel_fname))

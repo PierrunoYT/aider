@@ -37,7 +37,11 @@ inside chat. Only configure trusted commands.
 ## State and privacy
 
 Patch uses `.patch*` state files and `~/.patch/` for user-level data and caches.
-`--input-history-file` and `--chat-history-file` change history destinations.
+The repo map cache lives in `~/.patch/caches/`, keyed by a hash of the repository
+path, so a repository never supplies its own cache; `PATCH_TAGS_CACHE_DIR` moves it
+elsewhere. Any `.patch.tags.cache.v*` directory left by an earlier version is unused
+and safe to delete. `--input-history-file` and `--chat-history-file` change history
+destinations.
 History, logs, and verbose settings can contain sensitive data; do not publish them
 without review. Patch does not migrate `.aider*` or `AIDER_*` settings automatically.
 See [analytics](analytics.md) for the disabled-by-default telemetry instrumentation.

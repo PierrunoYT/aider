@@ -58,6 +58,14 @@ No confirmed Critical issues were found.
 
 **Recommendation:** Store the cache outside the repository in a user cache directory keyed by a hash of the canonical repository path. Serialize validated primitive tag records as JSON or another non-executable format, and treat decode/schema failures as misses.
 
+**Status:** Resolved. The cache moved to `~/.patch/caches/tags.v{version}/<sha256 of
+the canonical root>`, relocatable through `PATCH_TAGS_CACHE_DIR`. `RepoMap` now opens
+it with a `JsonDisk` serializer that stores keys and values as JSON and refuses to
+unpickle any entry, and `get_tags()` rebuilds tags only from records that pass a
+field-by-field check, treating decode and schema failures as misses.
+`tests/basic/test_repomap.py` covers the location, a planted pickle payload, an
+undecodable entry, and a malformed record.
+
 **Confidence:** High for the mechanism; Medium for arbitrary-checkout exploitability
 
 ---

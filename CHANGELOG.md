@@ -17,6 +17,12 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Security
 
+- Store the repo map tags cache in `~/.patch/caches/`, keyed by a hash of the
+  repository path, instead of inside the repository, and read it as JSON that is
+  validated before use. A repository can no longer ship a cache whose pickled
+  values run during a repo map scan, and a corrupt entry is now a cache miss.
+  `PATCH_TAGS_CACHE_DIR` relocates the cache; old `.patch.tags.cache.v*`
+  directories are unused and can be deleted.
 - Bind the `--browser` GUI to `127.0.0.1` instead of every network interface, and
   give each browser session its own state and coder so sessions can no longer read
   or corrupt one another's chat history, files, and undo state. Set

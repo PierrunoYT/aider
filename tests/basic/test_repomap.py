@@ -1,16 +1,19 @@
 import difflib
+import json
 import os
 import re
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch as mock_patch
 
 import git
+from diskcache import Cache, Disk
 
 from patch.dump import dump  # noqa: F401
 from patch.io import InputOutput
 from patch.models import Model
-from patch.repomap import RepoMap
+from patch.repomap import JsonDisk, RepoMap, Tag, get_tags_cache_path
 from patch.utils import GitTemporaryDirectory, IgnorantTemporaryDirectory
 
 
@@ -504,6 +507,123 @@ class TestRepoMapAllLanguages(unittest.TestCase):
 
         # If we reach here, the maps are identical
         self.assertEqual(generated_map_str, expected_map, "Generated map matches expected map")
+
+
+def write_canary(path):
+    """Payload for the planted cache entry, standing in for an exploit."""
+
+    Path(path).write_text("executed")
+    return []
+
+
+class Payload:
+    def __init__(self, canary):
+        self.canary = canary
+
+    def __reduce__(self):
+        return (write_canary, (self.canary,))
+
+
+class PicklingDisk(JsonDisk):
+    """Stores pickled values under the JSON keys that RepoMap looks up."""
+
+    def store(self, value, read, **kwargs):
+        return Disk.store(self, value, read, **kwargs)
+
+
+class TestTagsCache(unittest.TestCase):
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+        # tests/conftest.py points this at a temporary directory
+        self.tags_cache_dir = os.environ["PATCH_TAGS_CACHE_DIR"]
+
+    def make_repo(self, temp_dir):
+        fname = Path(temp_dir) / "file1.py"
+        fname.write_text("def hello():\n    return 'hello'\n")
+        return str(fname)
+
+    def get_tags(self, temp_dir, fname):
+        repo_map = RepoMap(main_model=self.GPT35, root=temp_dir, io=InputOutput())
+        try:
+            return repo_map.get_tags(fname, "file1.py")
+        finally:
+            # close the open cache files, so Windows won't error
+            del repo_map
+
+    def test_cache_is_stored_outside_the_repository(self):
+        with IgnorantTemporaryDirectory() as temp_dir:
+            fname = self.make_repo(temp_dir)
+            self.get_tags(temp_dir, fname)
+
+            self.assertEqual(list(Path(temp_dir).glob(".patch*")), [])
+
+            cache_path = get_tags_cache_path(temp_dir)
+            self.assertTrue(cache_path.exists())
+            self.assertIn(Path(self.tags_cache_dir), cache_path.parents)
+
+    def test_cache_path_follows_the_canonical_root(self):
+        with IgnorantTemporaryDirectory() as temp_dir:
+            subdir = Path(temp_dir) / "subdir"
+            subdir.mkdir()
+
+            self.assertEqual(
+                get_tags_cache_path(temp_dir),
+                get_tags_cache_path(str(subdir / "..")),
+            )
+            self.assertNotEqual(get_tags_cache_path(temp_dir), get_tags_cache_path(str(subdir)))
+
+    def test_cached_tags_round_trip(self):
+        with IgnorantTemporaryDirectory() as temp_dir:
+            fname = self.make_repo(temp_dir)
+            tags = self.get_tags(temp_dir, fname)
+            self.assertTrue(any(tag.name == "hello" for tag in tags))
+
+            # A second run must be served from the cache, as tags, not raw lists.
+            with mock_patch.object(
+                RepoMap, "get_tags_raw", side_effect=AssertionError("unexpected cache miss")
+            ):
+                cached = self.get_tags(temp_dir, fname)
+
+            self.assertEqual(cached, tags)
+            self.assertTrue(all(isinstance(tag, Tag) for tag in cached))
+
+    def test_planted_pickle_is_not_executed(self):
+        with IgnorantTemporaryDirectory() as temp_dir:
+            fname = self.make_repo(temp_dir)
+            canary = Path(temp_dir) / "canary.txt"
+
+            planted = Cache(get_tags_cache_path(temp_dir), disk=PicklingDisk)
+            planted[fname] = {"mtime": os.path.getmtime(fname), "data": Payload(str(canary))}
+            planted.close()
+
+            tags = self.get_tags(temp_dir, fname)
+
+            self.assertFalse(canary.exists(), "the planted cache entry was unpickled")
+            self.assertTrue(any(tag.name == "hello" for tag in tags))
+
+    def test_entry_with_unexpected_shape_is_a_miss(self):
+        with IgnorantTemporaryDirectory() as temp_dir:
+            fname = self.make_repo(temp_dir)
+
+            planted = Cache(get_tags_cache_path(temp_dir), disk=JsonDisk)
+            planted[fname] = {"mtime": os.path.getmtime(fname), "data": [["too", "short"]]}
+            planted.close()
+
+            tags = self.get_tags(temp_dir, fname)
+
+            self.assertTrue(any(tag.name == "hello" for tag in tags))
+
+    def test_undecodable_entry_is_a_miss(self):
+        with IgnorantTemporaryDirectory() as temp_dir:
+            fname = self.make_repo(temp_dir)
+
+            planted = Cache(get_tags_cache_path(temp_dir), disk=Disk)
+            planted[json.dumps(fname, sort_keys=True)] = "}not json{"
+            planted.close()
+
+            tags = self.get_tags(temp_dir, fname)
+
+            self.assertTrue(any(tag.name == "hello" for tag in tags))
 
 
 if __name__ == "__main__":
