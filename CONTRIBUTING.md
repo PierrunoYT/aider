@@ -203,6 +203,9 @@ inherited history changes, plus unrelated workflow files. Packaged-doc changes
 run tests. Both matrices currently cover Python 3.10–3.14; they install the base
 package and pytest, not every optional extra. Some browser and scraper tests use
 live services or runtime installers, so a full run requires network access.
+The scraper content tests use a local HTTP server; the self-signed TLS test still
+uses a live service. Both CI platforms install Pandoc before running tests rather
+than relying on its runtime download. Install Pandoc locally when running these tests.
 
 Formatting and lint checks run through `.github/workflows/pre-commit.yml`.
 PyPI publishing is manual-only through `.github/workflows/release.yml` (`workflow_dispatch`).

@@ -1,5 +1,7 @@
 import time
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
 from unittest.mock import MagicMock
 
 from patch.commands import Commands
@@ -8,6 +10,28 @@ from patch.scrape import Scraper
 
 
 class TestScrape(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                body = b"<html><body><h1>Example Domain</h1></body></html>"
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        cls.addClassCleanup(server.server_close)
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        cls.addClassCleanup(thread.join)
+        cls.addClassCleanup(server.shutdown)
+        cls.url = f"http://127.0.0.1:{server.server_port}"
+
     def test_scrape_self_signed_ssl(self):
         def scrape_with_retries(scraper, url, max_retries=5, delay=0.5):
             for _ in range(max_retries):
@@ -44,7 +68,7 @@ class TestScrape(unittest.TestCase):
         self.commands.io.tool_error = mock_print_error
 
         # Run the cmd_web command
-        result = self.commands.cmd_web("https://example.com", return_content=True)
+        result = self.commands.cmd_web(self.url, return_content=True)
 
         # Assert that the result contains some content
         self.assertIsNotNone(result)
@@ -71,8 +95,8 @@ class TestScrape(unittest.TestCase):
         mock_print_error = MagicMock()
         scraper = Scraper(print_error=mock_print_error, playwright_available=True)
 
-        # Scrape a real URL
-        result = scraper.scrape("https://example.com")
+        # Exercise real browser navigation without a third-party website.
+        result = scraper.scrape(self.url)
 
         # Assert that the result contains expected content
         self.assertIsNotNone(result)
@@ -87,7 +111,9 @@ class TestScrape(unittest.TestCase):
         scraper = Scraper(print_error=mock_print_error, verify_ssl=False)
 
         # Test various methods of the Scraper class
-        scraper.scrape_with_httpx("https://example.com")
+        content, mime_type = scraper.scrape_with_httpx(self.url)
+        self.assertIn("Example Domain", content)
+        self.assertEqual(mime_type, "text/html")
         scraper.try_pandoc()
         scraper.html_to_markdown("<html><body><h1>Test</h1></body></html>")
 

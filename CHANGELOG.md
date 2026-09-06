@@ -15,6 +15,14 @@ separately in [HISTORY.md](HISTORY.md).
 - Adopt Keep a Changelog formatting and document the Semantic Versioning policy
   for future releases.
 
+### Fixed
+
+- Use a local HTTP fixture for scraper tests instead of a public site that can
+  return bot challenges, and install Pandoc before CI tests to avoid runtime
+  download failures on Windows.
+- Make update-cache tests independent of filesystem clock resolution and cover
+  fresh, expired, and future-dated cache boundaries.
+
 ## [0.1.0] - 2026-09-06
 
 First release under the Patch identity. Supports Python 3.10–3.14.

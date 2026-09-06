@@ -33,9 +33,20 @@ def test_notice_on_launch_and_from_cache(update_check):
     assert cache.read_text() == "0.2.0"
 
     io.reset_mock()
-    assert versioncheck.check_version(io) is True
+    # Keep the cache age deterministic across filesystem/clock resolutions.
+    with patch("patch.versioncheck.time.time", return_value=cache.stat().st_mtime + 1):
+        assert versioncheck.check_version(io) is True
     io.tool_warning.assert_called_once()
     assert get.call_count == 1
+
+
+@pytest.mark.parametrize("age, refresh", [(-1, True), (0, False), (86399, False), (86400, True)])
+def test_cache_age_boundaries(update_check, age, refresh):
+    io, cache, get = update_check
+    cache.write_text("0.2.0")
+    with patch("patch.versioncheck.time.time", return_value=cache.stat().st_mtime + age):
+        assert versioncheck.check_version(io) is True
+    assert get.call_count == int(refresh)
 
 
 @pytest.mark.parametrize("latest", ["0.1.0", "0.0.9", "0.1.0rc1"])
