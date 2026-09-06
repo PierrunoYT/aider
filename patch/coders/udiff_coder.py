@@ -109,7 +109,7 @@ class UnifiedDiffCoder(Coder):
                 continue
 
             # SUCCESS!
-            self.io.write_text(full_path, content)
+            self.write_edited_file(path, content)
 
         if errors:
             errors = "\n\n".join(errors)

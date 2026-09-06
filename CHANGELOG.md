@@ -55,6 +55,10 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Report and commit only the files an edit actually changed. When applying a
+  response failed part-way, every file it mentioned was reported as edited and
+  auto-committed, which could sweep in unrelated changes to a file Patch never
+  wrote.
 - Keep `--dry-run` from creating the files an edit would have added. The
   `diff` and `udiff` formats created an empty file while working out the new
   content, which ran before the edit was authorized, so a declined or dry-run

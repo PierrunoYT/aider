@@ -607,7 +607,7 @@ class PatchCoder(Coder):
                     content_to_write = action.new_content
                     if not content_to_write.endswith("\n"):
                         content_to_write += "\n"
-                    self.io.write_text(full_path, content_to_write)
+                    self.write_edited_file(action.path, content_to_write)
 
                 elif action.type == ActionType.DELETE:
                     self.io.tool_output(f"Deleting {action.path}")
@@ -617,6 +617,7 @@ class PatchCoder(Coder):
                         )
                     else:
                         path_obj.unlink()
+                        self.applied_edits.add(action.path)
 
                 elif action.type == ActionType.UPDATE:
                     if not path_obj.exists():
@@ -655,11 +656,12 @@ class PatchCoder(Coder):
 
                     # Ensure parent directory exists for target
                     target_path_obj.parent.mkdir(parents=True, exist_ok=True)
-                    self.io.write_text(target_full_path, new_content)
+                    self.write_edited_file(action.move_path or action.path, new_content)
 
                     # Remove original file *after* successful write to new location if moved
                     if action.move_path and full_path != target_full_path:
                         path_obj.unlink()
+                        self.applied_edits.add(action.path)
 
                 else:
                     # Should not happen

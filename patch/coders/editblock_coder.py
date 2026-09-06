@@ -68,7 +68,7 @@ class EditBlockCoder(Coder):
 
             if new_content:
                 if not dry_run:
-                    self.io.write_text(full_path, new_content)
+                    self.write_edited_file(path, new_content)
                 passed.append(edit)
             else:
                 failed.append(edit)

@@ -614,6 +614,53 @@ Console.WriteLine("Hello, C# World!");
         self.assertEqual(edits, [("Program.cs", search_text, replace_text)])
 
 
+class TestPartialApplication(unittest.TestCase):
+    """Only the files that really changed may be reported and committed."""
+
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+
+    def test_failed_block_is_not_reported_as_edited(self):
+        with ChdirTemporaryDirectory():
+            good = Path("good.txt")
+            good.write_text("one\n")
+            bad = Path("bad.txt")
+            bad.write_text("keep\n")
+
+            coder = Coder.create(
+                self.GPT35,
+                "diff",
+                io=InputOutput(yes=True),
+                fnames=[str(good), str(bad)],
+                use_git=False,
+            )
+
+            # The second block cannot match, so applying stops with an error
+            coder.partial_response_content = """
+good.txt
+<<<<<<< SEARCH
+one
+=======
+two
+>>>>>>> REPLACE
+
+bad.txt
+<<<<<<< SEARCH
+this text is not in the file
+=======
+whatever
+>>>>>>> REPLACE
+
+"""
+            edited = coder.apply_updates()
+
+            self.assertEqual(good.read_text(), "two\n")
+            self.assertEqual(bad.read_text(), "keep\n")
+            # bad.txt never changed, so it is not reported as edited
+            self.assertEqual(edited, {"good.txt"})
+            self.assertTrue(coder.reflected_message)
+
+
 class TestDryRunIsPure(unittest.TestCase):
     """A dry run answers what would happen, it does not touch the filesystem."""
 

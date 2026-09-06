@@ -390,6 +390,8 @@ class Coder:
         self.verbose = verbose
         self.abs_fnames = set()
         self.abs_read_only_fnames = set()
+        # Paths written by the edits being applied right now
+        self.applied_edits = set()
         self.add_gitignore_files = add_gitignore_files
 
         if cur_messages:
@@ -2330,16 +2332,29 @@ class Coder:
 
         return res
 
+    def write_edited_file(self, path, content):
+        """Write one edited file, and record that this path really changed.
+
+        Application is sequential, so a failure part-way through leaves earlier
+        edits written and later ones not. Only what was written may be reported
+        and committed.
+        """
+
+        self.io.write_text(self.abs_root_path(path), content)
+        self.applied_edits.add(path)
+
     def apply_updates(self):
         edited = set()
+        self.applied_edits = set()
         try:
             edits = self.get_edits()
             edits = self.apply_edits_dry_run(edits)
             edits = self.prepare_to_edit(edits)
-            edited = set(edit[0] for edit in edits)
 
             self.apply_edits(edits)
+            edited = set(self.applied_edits)
         except ValueError as err:
+            edited = set(self.applied_edits)
             self.num_malformed_responses += 1
 
             err = err.args[0]
@@ -2354,7 +2369,7 @@ class Coder:
 
         except ANY_GIT_ERROR as err:
             self.io.tool_error(str(err))
-            return edited
+            return set(self.applied_edits)
         except Exception as err:
             self.io.tool_error("Exception while updating files:")
             self.io.tool_error(str(err), strip=False)
@@ -2362,7 +2377,7 @@ class Coder:
             traceback.print_exc()
 
             self.reflected_message = str(err)
-            return edited
+            return set(self.applied_edits)
 
         for path in edited:
             if self.dry_run:

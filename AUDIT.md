@@ -301,7 +301,7 @@ nothing and that a real run still creates the file.
 
 ---
 
-### [Medium] Partial edit failures report and commit paths that were not changed
+### Resolved: [Medium] Partial edit failures report and commit paths that were not changed
 
 **Location:** `patch/coders/base_coder.py:1585-1602,2296-2336`
 
@@ -310,6 +310,15 @@ nothing and that a real run still creates the file.
 **Impact:** Failed responses can be reported as editing every requested file. Auto-commit can include pre-existing modifications in a path Patch never changed, especially when dirty pre-commit behavior is disabled.
 
 **Recommendation:** Validate all edits before writing where possible and return a structured result containing only successfully changed paths plus any error.
+
+**Status:** Resolved, through the reporting half of the recommendation rather than
+a structured result type. Coders write through `write_edited_file()`, which records
+the path, and `apply_updates()` returns only the recorded paths on every exit,
+including the error paths. A response whose later edits fail no longer reports or
+commits the files those edits would have touched. Patch-format moves record both
+the destination written and the source removed.
+`tests/basic/test_editblock.py::TestPartialApplication` covers a response where the
+second block cannot match.
 
 **Confidence:** High
 
