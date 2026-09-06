@@ -5,6 +5,10 @@ For the inherited release history, see [the previous changelog](HISTORY.md).
 
 ## Unreleased
 
+### Added
+
+- Added repository-wide agent guidance in `AGENTS.md` and a contributor policy requiring documentation review and updates after every change, including changelog entries and preservation of upstream history.
+
 ### Changed
 
 - Show a terminal notice with the available version and upgrade command when a newer `patch-code` release is available. Reuse successful checks for 24 hours, keep showing cached notices on launch, and leave installation to the user. Failed checks do not interrupt normal startup.

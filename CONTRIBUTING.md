@@ -33,6 +33,20 @@ change, please discuss it in a GitHub issue before submitting the
 PR. This will save both you and the maintainers time, and it helps to
 ensure that your contributions can be integrated smoothly.
 
+### Documentation Requirements
+
+After every change, review all documentation and update every affected document
+in the same PR, including the README, website documentation, CLI/configuration
+examples, and contributor instructions. Keep duplicated instructions consistent;
+unaffected documentation does not need cosmetic edits.
+
+Add an entry under `Unreleased` in [CHANGELOG.md](CHANGELOG.md). Preserve the
+inherited `HISTORY.md` files as upstream history. If no other documentation needs
+updating, explain why in the PR summary.
+
+Agents must also follow [AGENTS.md](AGENTS.md), which covers repository conventions,
+verification, and precautions for generated documentation and private analytics.
+
 ## Licensing
 
 Before contributing a PR, please review our
