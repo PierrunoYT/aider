@@ -28,6 +28,9 @@ reloading the page starts a new session.
 
 An edit error means Patch could not apply the model's requested format or match
 its source text. Patch normally sends feedback to the model so it can retry.
+A response that stops mid-listing, because the model hit its output limit or the
+connection was cut, is rejected rather than applied: an unterminated ``` block in
+the `whole` format would otherwise replace a file with the part that arrived.
 If failures repeat, reduce the request, add the correct files, and use a model
 with reliable editing support. Check [edit formats](models.md#edit-formats).
 Review the diff: a failed response may still have applied some edits.

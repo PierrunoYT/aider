@@ -17,6 +17,9 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Security
 
+- Reject a `whole`-format response whose file listing was never closed instead of
+  replacing the file with the part that arrived, and ask the model to send the file
+  again. Live previews stay permissive.
 - Authorize the destination of a `patch`-format move, not just its source, and ask
   separately before overwriting a file that already exists there. `--yes-always`
   does not answer that question. A move onto a read-only file, or one that resolves

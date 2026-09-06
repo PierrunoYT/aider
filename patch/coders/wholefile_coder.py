@@ -103,7 +103,12 @@ class WholeFileCoder(Coder):
             return "\n".join(output)
 
         if fname:
-            edits.append((fname, fname_source, new_lines))
+            # The response ended inside a listing. Writing what arrived so far
+            # would replace the file with a truncated copy of itself.
+            raise ValueError(
+                f"The {self.fence[0]} listing for {fname} was never closed with"
+                f" {self.fence[1]}. Send the complete file again."
+            )
 
         seen = set()
         refined_edits = []

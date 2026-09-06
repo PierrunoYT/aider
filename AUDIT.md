@@ -211,7 +211,7 @@ remains unsupported.
 
 ---
 
-### [High] WholeFileCoder writes truncated content from an unterminated fence
+### Resolved: [High] WholeFileCoder writes truncated content from an unterminated fence
 
 **Location:** `patch/coders/wholefile_coder.py:75-128`; default selection in `patch/models.py:131`
 
@@ -222,6 +222,13 @@ remains unsupported.
 **Evidence:** The independent audit reproduced a five-line file being replaced by the first two partial lines from an unterminated block.
 
 **Recommendation:** In final parsing mode, reject EOF while a fence is open. Retain permissive parsing only for non-writing live-diff preview.
+
+**Status:** Resolved as recommended. `get_edits()` raises a `ValueError` naming the
+file when the response ends inside a listing, so `apply_updates()` reports the
+malformed response and reflects it back to the model instead of writing. The
+`mode="diff"` preview path is unchanged.
+`tests/basic/test_wholefile.py` covers the rejection, the untouched file, the
+reflected message, and that previews still render.
 
 **Confidence:** High
 

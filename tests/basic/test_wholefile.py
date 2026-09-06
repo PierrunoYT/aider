@@ -354,6 +354,50 @@ Do this:
         # check for one trailing newline
         self.assertEqual(content, new_content + "\n")
 
+    def test_unterminated_fence_is_rejected(self):
+        # Create a file to be edited
+        sample_file = "sample.txt"
+        Path(sample_file).write_text("one\ntwo\nthree\nfour\nfive\n")
+
+        io = InputOutput(yes=True)
+        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[sample_file])
+
+        # The listing stops in the middle, as a truncated response does
+        coder.partial_response_content = f"""Here you go:
+
+{sample_file}
+```
+one
+two
+"""
+
+        with self.assertRaises(ValueError) as err:
+            coder.get_edits()
+
+        self.assertIn(sample_file, str(err.exception))
+
+        coder.apply_updates()
+
+        # The file keeps its content, and the model is asked to try again
+        self.assertEqual(Path(sample_file).read_text(), "one\ntwo\nthree\nfour\nfive\n")
+        self.assertIn(sample_file, coder.reflected_message)
+
+    def test_unterminated_fence_still_previews(self):
+        sample_file = "sample.txt"
+        Path(sample_file).write_text("one\ntwo\n")
+
+        io = InputOutput(yes=True)
+        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[sample_file])
+        coder.partial_response_content = f"""Here you go:
+
+{sample_file}
+```
+one
+"""
+
+        # The live preview stays permissive: it shows a response as it arrives
+        self.assertIsInstance(coder.render_incremental_response(True), str)
+
 
 if __name__ == "__main__":
     unittest.main()
