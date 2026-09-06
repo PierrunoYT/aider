@@ -324,7 +324,7 @@ second block cannot match.
 
 ---
 
-### [Medium] Full-file deletion is treated as a failed edit
+### Resolved: [Medium] Full-file deletion is treated as a failed edit
 
 **Location:** `patch/coders/editblock_coder.py:41-74`; `patch/coders/udiff_coder.py:69-118`
 
@@ -342,6 +342,16 @@ if new_content is None:
 else:
     self.io.write_text(full_path, new_content)
 ```
+
+**Status:** Resolved as recommended. `None` now means no match in both coders, and
+the checks along each replacement path, from `perfect_or_whitespace()` and
+`replace_most_similar_chunk()` through `apply_hunk()` and `apply_partial_hunk()`,
+test for it explicitly rather than for truthiness. The `diff` format applies an
+edit that empties a file and no longer falls through to another file in the chat.
+The `udiff` case turned out to be masked by the trailing newline it adds, so its
+change is hardening rather than a fix.
+`tests/basic/test_editblock.py::TestEmptyResult` and
+`tests/basic/test_udiff.py::TestUnifiedDiffEmptyResult` cover emptying a file.
 
 **Confidence:** High
 

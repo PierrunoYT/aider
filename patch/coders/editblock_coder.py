@@ -55,18 +55,20 @@ class EditBlockCoder(Coder):
             # If the edit failed, and
             # this is not a "create a new file" with an empty original...
             # https://github.com/Aider-AI/aider/issues/2258
-            if not new_content and original.strip():
+            # An empty result means the edit emptied the file, so only None is a
+            # failure to match.
+            if new_content is None and original.strip():
                 # try patching any of the other files in the chat
                 for full_path in self.abs_fnames:
                     content = self.io.read_text(full_path)
                     new_content = do_replace(full_path, content, original, updated, self.fence)
-                    if new_content:
+                    if new_content is not None:
                         path = self.get_rel_fname(full_path)
                         break
 
             updated_edits.append((path, original, updated))
 
-            if new_content:
+            if new_content is not None:
                 if not dry_run:
                     self.write_edited_file(path, new_content)
                 passed.append(edit)
@@ -135,12 +137,12 @@ def prep(content):
 def perfect_or_whitespace(whole_lines, part_lines, replace_lines):
     # Try for a perfect match
     res = perfect_replace(whole_lines, part_lines, replace_lines)
-    if res:
+    if res is not None:
         return res
 
     # Try being flexible about leading whitespace
     res = replace_part_with_missing_leading_whitespace(whole_lines, part_lines, replace_lines)
-    if res:
+    if res is not None:
         return res
 
 
@@ -163,20 +165,20 @@ def replace_most_similar_chunk(whole, part, replace):
     replace, replace_lines = prep(replace)
 
     res = perfect_or_whitespace(whole_lines, part_lines, replace_lines)
-    if res:
+    if res is not None:
         return res
 
     # drop leading empty line, GPT sometimes adds them spuriously (issue #25)
     if len(part_lines) > 2 and not part_lines[0].strip():
         skip_blank_line_part_lines = part_lines[1:]
         res = perfect_or_whitespace(whole_lines, skip_blank_line_part_lines, replace_lines)
-        if res:
+        if res is not None:
             return res
 
     # Try to handle when it elides code with ...
     try:
         res = try_dotdotdots(whole, part, replace)
-        if res:
+        if res is not None:
             return res
     except ValueError:
         pass

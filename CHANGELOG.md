@@ -55,6 +55,9 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Apply an edit that empties a file instead of reporting it as a block that failed
+  to match, which also stopped the `diff` format from trying the same edit against
+  another file in the chat.
 - Report and commit only the files an edit actually changed. When applying a
   response failed part-way, every file it mentioned was reported as edited and
   auto-committed, which could sweep in unrelated changes to a file Patch never

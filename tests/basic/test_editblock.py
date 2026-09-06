@@ -614,6 +614,46 @@ Console.WriteLine("Hello, C# World!");
         self.assertEqual(edits, [("Program.cs", search_text, replace_text)])
 
 
+class TestEmptyResult(unittest.TestCase):
+    """Emptying a file is a successful edit, not a failure to match."""
+
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+
+    def test_replace_most_similar_chunk_can_return_empty(self):
+        self.assertEqual(eb.replace_most_similar_chunk("one\n", "one\n", ""), "")
+
+    def test_emptying_a_file_is_applied(self):
+        with ChdirTemporaryDirectory():
+            target = Path("target.txt")
+            target.write_text("one\n")
+            other = Path("other.txt")
+            other.write_text("one\n")
+
+            coder = Coder.create(
+                self.GPT35,
+                "diff",
+                io=InputOutput(yes=True),
+                fnames=[str(target), str(other)],
+                use_git=False,
+            )
+            coder.partial_response_content = """
+target.txt
+<<<<<<< SEARCH
+one
+=======
+>>>>>>> REPLACE
+
+"""
+            edited = coder.apply_updates()
+
+            self.assertEqual(target.read_text(), "")
+            self.assertEqual(edited, {"target.txt"})
+            # The fallback must not have applied this to the other chat file
+            self.assertEqual(other.read_text(), "one\n")
+            self.assertFalse(getattr(coder, "reflected_message", None))
+
+
 class TestPartialApplication(unittest.TestCase):
     """Only the files that really changed may be reported and committed."""
 

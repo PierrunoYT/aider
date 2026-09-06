@@ -100,7 +100,8 @@ class UnifiedDiffCoder(Coder):
                 )
                 continue
 
-            if not content:
+            # An empty result means the hunk emptied the file
+            if content is None:
                 errors.append(
                     no_match_error.format(
                         path=path, original=original, num_lines=len(original.splitlines())
@@ -141,7 +142,7 @@ def do_replace(fname, content, hunk):
     new_content = None
 
     new_content = apply_hunk(content, hunk)
-    if new_content:
+    if new_content is not None:
         return new_content
 
 
@@ -153,7 +154,7 @@ def apply_hunk(content, hunk):
     before_text, after_text = hunk_to_before_after(hunk)
 
     res = directly_apply_hunk(content, hunk)
-    if res:
+    if res is not None:
         return res
 
     hunk = make_new_lines_explicit(content, hunk)
@@ -187,7 +188,7 @@ def apply_hunk(content, hunk):
         following_context = sections[i]
 
         res = apply_partial_hunk(content, preceding_context, changes, following_context)
-        if res:
+        if res is not None:
             content = res
         else:
             all_done = False
@@ -306,7 +307,7 @@ def apply_partial_hunk(content, preceding_context, changes, following_context):
             this_foll = following_context[:use_foll]
 
             res = directly_apply_hunk(content, this_prec + changes + this_foll)
-            if res:
+            if res is not None:
                 return res
 
 

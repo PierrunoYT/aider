@@ -120,6 +120,39 @@ These changes will add the `--check-update` option to the command-line interface
         self.assertEqual(len(edits[0][1]), 3)
 
 
+class TestUnifiedDiffEmptyResult(unittest.TestCase):
+    """Emptying a file is a successful edit, not a failure to match."""
+
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+
+    def test_emptying_a_file_is_applied(self):
+        with ChdirTemporaryDirectory():
+            target = Path("target.txt")
+            target.write_text("one\n")
+
+            coder = Coder.create(
+                self.GPT35,
+                "udiff",
+                io=InputOutput(yes=True),
+                fnames=[str(target)],
+                use_git=False,
+            )
+            coder.partial_response_content = """```diff
+--- target.txt
++++ target.txt
+@@ ... @@
+-one
+```
+"""
+            edited = coder.apply_updates()
+
+            # udiff keeps a trailing newline on the file it writes
+            self.assertEqual(target.read_text(), "\n")
+            self.assertEqual(edited, {"target.txt"})
+            self.assertFalse(getattr(coder, "reflected_message", None))
+
+
 class TestUnifiedDiffDryRun(unittest.TestCase):
     """A dry run answers what would happen, it does not touch the filesystem."""
 
