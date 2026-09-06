@@ -714,3 +714,55 @@ class TestRepo(unittest.TestCase):
                 system_msg_content.startswith(prefix),
                 "system_prompt_prefix should be prepended to the system prompt",
             )
+
+
+class TestGitErrors(unittest.TestCase):
+    """A defect in Patch must not read as an ordinary Git failure."""
+
+    def make_repo(self):
+        raw_repo = git.Repo()
+        fname = Path("file.txt")
+        fname.write_text("one\n")
+        raw_repo.git.add(str(fname))
+        raw_repo.git.commit("-m", "init")
+
+        return GitRepo(InputOutput(), None, None), fname
+
+    def test_a_git_failure_is_reported(self):
+        with GitTemporaryDirectory():
+            repo, fname = self.make_repo()
+            fname.write_text("two\n")
+
+            error = git.exc.GitCommandError("commit", 1)
+            with patch.object(git.cmd.Git, "commit", create=True, side_effect=error):
+                result = repo.commit(fnames=[str(fname)], message="a message")
+
+            self.assertIsNone(result)
+
+    def test_a_programming_error_is_not_swallowed(self):
+        with GitTemporaryDirectory():
+            repo, fname = self.make_repo()
+            fname.write_text("two\n")
+
+            with patch.object(
+                git.cmd.Git, "commit", create=True, side_effect=TypeError("a defect")
+            ):
+                with self.assertRaises(TypeError):
+                    repo.commit(fnames=[str(fname)], message="a message")
+
+    def test_a_repository_with_no_commits_still_lists_files(self):
+        with GitTemporaryDirectory():
+            git.Repo()
+            repo = GitRepo(InputOutput(), None, None)
+
+            self.assertEqual(repo.get_tracked_files(), [])
+
+    def test_a_detached_head_still_diffs(self):
+        with GitTemporaryDirectory():
+            repo, fname = self.make_repo()
+            repo.repo.git.checkout("--detach")
+            fname.write_text("two\n")
+
+            diffs = repo.get_diffs()
+
+            self.assertIn("two", diffs)

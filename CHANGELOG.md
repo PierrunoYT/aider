@@ -55,6 +55,11 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Stop reporting internal errors as Git failures. Git operations caught
+  `TypeError`, `ValueError`, `AttributeError`, `AssertionError`, `IndexError`, and
+  `BufferError` as well as real Git errors, so a defect surfaced as "Unable to
+  commit" with no traceback. The repository states that legitimately raise those,
+  a detached HEAD or a repository with no commits, are still handled.
 - Mask every credential in `/settings`, `--verbose` output, and the command line
   written to the chat history, not just the OpenAI and Anthropic key options. Keys
   passed as `--api-key provider=KEY` and secrets passed as `--set-env` were

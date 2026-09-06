@@ -586,7 +586,7 @@ write, the fallback, dry runs, and symlinks.
 
 ---
 
-### [Medium] Git exception tuple hides ordinary programming errors
+### Resolved: [Medium] Git exception tuple hides ordinary programming errors
 
 **Location:** `patch/repo.py:15-36,295-318` and other `except ANY_GIT_ERROR` call sites
 
@@ -595,6 +595,16 @@ write, the fallback, dry runs, and symlinks.
 **Impact:** Programming defects inside broad Git operations are converted into ordinary “Unable to commit” failures, suppressing tracebacks and allowing execution to continue with state different from what callers expect.
 
 **Recommendation:** Restrict the tuple to documented Git exceptions and narrowly justified OS errors. Catch data-shape errors only at specific parsing boundaries.
+
+**Status:** Resolved as recommended. `ANY_GIT_ERROR` is now the GitPython error
+classes plus `OSError`, which covers `TimeoutError`. The data-shape errors
+GitPython raises for ordinary repository states were already caught at their own
+boundaries, the `TypeError` for a detached HEAD and the `ValueError` for a
+repository with no commits in `repo.py`, and the `IndexError` while walking a tree
+object. Removing `AssertionError` also lets `main.py` reach its own handler for the
+unsupported Git index versions, which the broad tuple had been swallowing first.
+`tests/basic/test_repo.py::TestGitErrors` covers a reported Git failure, an
+unswallowed defect, an empty repository, and a detached HEAD.
 
 **Confidence:** High
 

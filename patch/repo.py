@@ -23,16 +23,12 @@ from patch import prompts, utils
 from .dump import dump  # noqa: F401
 from .waiting import WaitingSpinner
 
-ANY_GIT_ERROR += [
-    OSError,
-    IndexError,
-    BufferError,
-    TypeError,
-    ValueError,
-    AttributeError,
-    AssertionError,
-    TimeoutError,
-]
+# Only the ways a Git operation itself can fail. GitPython also raises plain
+# TypeError, ValueError and IndexError for ordinary repository states, such as a
+# detached HEAD or a repository with no commits, and those are caught where they
+# can happen. Catching them everywhere turned a defect in Patch into an ordinary
+# "Unable to commit" message with no traceback.
+ANY_GIT_ERROR += [OSError]  # TimeoutError is an OSError
 ANY_GIT_ERROR = tuple(ANY_GIT_ERROR)
 
 
