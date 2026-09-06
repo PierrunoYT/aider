@@ -104,7 +104,6 @@ window.addEventListener('load', function(){
     cookie: {
       name: 'cookieconsent_status',
       path: '/',
-      domain: 'patch.chat',
       expiryDays: 365
     },
     content: {
@@ -112,7 +111,7 @@ window.addEventListener('load', function(){
       dismiss: "Decline",
       allow: "Accept",
       link: "Learn more",
-      href: "https://aider.chat/docs/legal/privacy.html"
+      href: "/docs/legal/privacy.html"
     },
     onInitialise: function(status) {
       var type = this.options.type;

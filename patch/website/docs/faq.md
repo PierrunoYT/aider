@@ -368,10 +368,15 @@ While you're waiting for patch's reply to complete, it's probably unwise to
 edit files that you've added to the chat.
 Your edits and patch's edits might conflict.
 
-## What is Patch AI LLC?
+## What is Aider AI LLC?
 
-Patch AI LLC is the company behind the patch AI coding tool.
-Patch is 
+Aider AI LLC is the company behind upstream
+[Aider](https://github.com/Aider-AI/aider), the project Patch is forked from.
+It owns the inherited contributor agreement and privacy policy retained on this
+site.
+
+Patch itself is an independent fork with no associated legal entity, and is not
+affiliated with or endorsed by Aider AI LLC. Patch is
 [open source and available on GitHub](https://github.com/PierrunoYT/patch)
 under an 
 [Apache 2.0 license](https://github.com/PierrunoYT/patch/blob/main/LICENSE.txt).

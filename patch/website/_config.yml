@@ -3,7 +3,9 @@ theme: just-the-docs
 # Analytics configuration
 analytics:
   enabled: false  # Single switch to control analytics and cookie consent
-  posthog_key: 'phc_99T7muzafUMMZX15H8XePbMSreEUzahHbtWjy3l5Qbv'
+  # The inherited key belonged to upstream Aider's PostHog project. Set a Patch
+  # project key here before enabling analytics; do not report to upstream.
+  posthog_key: ''
   posthog_host: 'https://us.i.posthog.com'
 
 plugins:

@@ -9,6 +9,12 @@ description: Opt-in, anonymous, no personal info.
 Patch can collect anonymous analytics to help
 improve patch's ability to work with LLMs, edit code and complete user requests.
 
+> **Fork note:** Patch still ships upstream Aider's PostHog project key, so any
+> analytics this fork collects are reported to the upstream Aider project rather
+> than to Patch. Until a Patch-owned project is configured, opt out permanently
+> with `patch --analytics-disable`, or send events somewhere you control with
+> `--analytics-posthog-project-api-key` and `--analytics-posthog-host`.
+
 ## Opt-in, anonymous, no personal info
 
 Analytics are only collected if you agree and opt-in. 
@@ -77,9 +83,9 @@ If you say "no", analytics will be permanently disabled.
 ### Sample analytics data
 
 To get a better sense of what type of data is collected, you can review some
-[sample analytics logs](https://github.com/patch-ai/patch/blob/main/patch/website/assets/sample-analytics.jsonl).
-These are the last 1,000 analytics events from the author's
-personal use of patch, updated regularly.
+[sample analytics logs](https://github.com/PierrunoYT/patch/blob/main/patch/website/assets/sample-analytics.jsonl).
+These are 1,000 analytics events retained from upstream Aider, kept as an
+example of the event shape.
 
 
 ### Analytics code
@@ -87,7 +93,7 @@ personal use of patch, updated regularly.
 Since patch is open source, all the places where patch collects analytics
 are visible in the source code.
 They can be viewed using 
-[GitHub search](https://github.com/search?q=repo%3Apatch-ai%2Fpatch+%22.event%28%22&type=code).
+[GitHub search](https://github.com/search?q=repo%3APierrunoYT%2Fpatch+%22.event%28%22&type=code).
 
 
 ### Logging and inspecting analytics
@@ -117,7 +123,7 @@ Patch uses PostHog for analytics collection. You can configure patch to send ana
 If you have concerns about any of the analytics that patch is collecting
 or our data practices
 please contact us by opening a
-[GitHub Issue](https://github.com/patch-ai/patch/issues).
+[GitHub Issue](https://github.com/PierrunoYT/patch/issues).
 
 ## Privacy policy
 

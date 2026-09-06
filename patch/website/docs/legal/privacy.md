@@ -5,8 +5,13 @@ nav_order: 500
 
 # Privacy policy
 
-[Patch AI LLC](/docs/faq.html#what-is-patch-ai-llc)
-(“Patch,” “we,” “our,” and/or “us”) values the privacy of individuals who use our website, programming tools, and related services (collectively, our “Services”). This privacy policy (the “Privacy Policy”) explains how we collect, use, and disclose information from users of our Services. By using our Services, you agree to the collection, use, disclosure, and procedures this Privacy Policy describes. 
+> This is the upstream [Aider](https://github.com/Aider-AI/aider) privacy
+> policy, retained for reference. It describes the aider.chat website and
+> Aider's analytics. Patch is an independent fork; there is no "Patch AI"
+> legal entity and this fork operates no website.
+
+[Aider AI LLC](/docs/faq.html#what-is-aider-ai-llc)
+(“Aider,” “we,” “our,” and/or “us”) values the privacy of individuals who use our website, programming tools, and related services (collectively, our “Services”). This privacy policy (the “Privacy Policy”) explains how we collect, use, and disclose information from users of our Services. By using our Services, you agree to the collection, use, disclosure, and procedures this Privacy Policy describes. 
 
 ### Information We Collect
 
@@ -69,7 +74,7 @@ We make reasonable efforts to protect your information by using physical and ele
 
 ### Children’s Privacy
 
-We do not knowingly collect, maintain, or use personal information from children under 18 years of age, and no part of our Service(s) is directed to children. If you learn that a child has provided us with personal information in violation of this Privacy Policy, then you may alert us at privacy@patch.chat.
+We do not knowingly collect, maintain, or use personal information from children under 18 years of age, and no part of our Service(s) is directed to children. If you learn that a child has provided us with personal information in violation of this Privacy Policy, then you may alert us at privacy@aider.chat.
 
 ### International Visitors
 
@@ -82,7 +87,7 @@ We will post any adjustments to the Privacy Policy on this page, and the revised
 
 ### Contact Information
 
-If you have any questions, comments, or concerns about our processing activities, please email us at privacy@patch.chat.
+If you have any questions, comments, or concerns about our processing activities, please email us at privacy@aider.chat.
 
 ----
 
