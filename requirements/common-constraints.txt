@@ -308,7 +308,7 @@ numpy==1.26.4 ; python_full_version < '3.11'
     #   soundfile
     #   streamlit
     #   transformers
-numpy==2.4.6 ; python_full_version >= '3.11'
+numpy==2.5.2 ; python_full_version >= '3.11'
     # via
     #   -r requirements/python-compat.in
     #   -r requirements/requirements-help.in
