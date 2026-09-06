@@ -125,7 +125,8 @@ def do_replace(fname, content, hunk):
 
     # does it want to make a new file?
     if not fname.exists() and not before_text.strip():
-        fname.touch()
+        # Start from empty content rather than creating the file here, which
+        # would write during a dry run. The real write path creates it.
         content = ""
 
     if content is None:

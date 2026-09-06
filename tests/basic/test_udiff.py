@@ -1,7 +1,12 @@
 import unittest
+from pathlib import Path
 
+from patch.coders import Coder
 from patch.coders.udiff_coder import find_diffs
 from patch.dump import dump  # noqa: F401
+from patch.io import InputOutput
+from patch.models import Model
+from patch.utils import ChdirTemporaryDirectory
 
 
 class TestUnifiedDiffCoder(unittest.TestCase):
@@ -113,6 +118,47 @@ These changes will add the `--check-update` option to the command-line interface
         dump(edits)
         self.assertEqual(len(edits), 2)
         self.assertEqual(len(edits[0][1]), 3)
+
+
+class TestUnifiedDiffDryRun(unittest.TestCase):
+    """A dry run answers what would happen, it does not touch the filesystem."""
+
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+
+    new_file_response = """```diff
+--- /dev/null
++++ new.txt
+@@ ... @@
++hello
+```
+"""
+
+    def make_coder(self, dry_run):
+        return Coder.create(
+            self.GPT35,
+            "udiff",
+            io=InputOutput(dry_run=dry_run, yes=True),
+            fnames=[],
+            dry_run=dry_run,
+            use_git=False,
+        )
+
+    def test_dry_run_creates_no_new_file(self):
+        with ChdirTemporaryDirectory():
+            coder = self.make_coder(dry_run=True)
+            coder.partial_response_content = self.new_file_response
+            coder.apply_updates()
+
+            self.assertFalse(Path("new.txt").exists())
+
+    def test_new_file_is_still_created_without_dry_run(self):
+        with ChdirTemporaryDirectory():
+            coder = self.make_coder(dry_run=False)
+            coder.partial_response_content = self.new_file_response
+            coder.apply_updates()
+
+            self.assertEqual(Path("new.txt").read_text(), "hello\n")
 
 
 if __name__ == "__main__":

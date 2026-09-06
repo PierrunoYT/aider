@@ -614,5 +614,60 @@ Console.WriteLine("Hello, C# World!");
         self.assertEqual(edits, [("Program.cs", search_text, replace_text)])
 
 
+class TestDryRunIsPure(unittest.TestCase):
+    """A dry run answers what would happen, it does not touch the filesystem."""
+
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+
+    def new_file_response(self, fname):
+        return f"""
+{fname}
+<<<<<<< SEARCH
+=======
+hello
+>>>>>>> REPLACE
+
+"""
+
+    def test_do_replace_does_not_create_the_file(self):
+        with ChdirTemporaryDirectory():
+            new_file = Path("new.txt")
+
+            content = eb.do_replace(new_file, None, "", "hello\n", ("```", "```"))
+
+            self.assertEqual(content, "hello\n")
+            self.assertFalse(new_file.exists())
+
+    def test_dry_run_creates_no_new_file(self):
+        with ChdirTemporaryDirectory():
+            coder = Coder.create(
+                self.GPT35,
+                "diff",
+                io=InputOutput(dry_run=True, yes=True),
+                fnames=[],
+                dry_run=True,
+                use_git=False,
+            )
+            coder.partial_response_content = self.new_file_response("new.txt")
+            coder.apply_updates()
+
+            self.assertFalse(Path("new.txt").exists())
+
+    def test_new_file_is_still_created_without_dry_run(self):
+        with ChdirTemporaryDirectory():
+            coder = Coder.create(
+                self.GPT35,
+                "diff",
+                io=InputOutput(yes=True),
+                fnames=[],
+                use_git=False,
+            )
+            coder.partial_response_content = self.new_file_response("new.txt")
+            coder.apply_updates()
+
+            self.assertEqual(Path("new.txt").read_text(), "hello\n")
+
+
 if __name__ == "__main__":
     unittest.main()

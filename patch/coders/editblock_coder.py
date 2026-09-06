@@ -86,7 +86,8 @@ class EditBlockCoder(Coder):
             path, original, updated = edit
 
             full_path = self.abs_root_path(path)
-            content = self.io.read_text(full_path)
+            # The file may not exist, during a dry run of a new file for example
+            content = self.io.read_text(full_path) or ""
 
             res += f"""
 ## SearchReplaceNoExactMatch: This SEARCH block failed to exactly match lines in {path}
@@ -368,7 +369,9 @@ def do_replace(fname, content, before_text, after_text, fence=None):
 
     # does it want to make a new file?
     if not fname.exists() and not before_text.strip():
-        fname.touch()
+        # Start from empty content rather than creating the file here: this runs
+        # during the dry run, before the edit is authorized, and the real write
+        # path creates the file itself.
         content = ""
 
     if content is None:

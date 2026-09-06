@@ -23,6 +23,9 @@ The `patch` edit format can move a file. Its destination is authorized like any
 other edit, and overwriting an existing file at the destination needs an explicit
 yes, which `--yes-always` does not give.
 
+`--dry-run` reports the edits Patch would make and writes nothing, including the
+files an edit would have created.
+
 ## Large repositories
 
 Start Patch in the repository and add only the files you expect to edit.

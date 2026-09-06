@@ -55,6 +55,10 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Keep `--dry-run` from creating the files an edit would have added. The
+  `diff` and `udiff` formats created an empty file while working out the new
+  content, which ran before the edit was authorized, so a declined or dry-run
+  edit left a zero-byte file behind.
 - Scrub ambient provider credentials in the `main()` tests, which otherwise decided
   which model was selected and sent a live OpenRouter tier request with the
   developer's own key.

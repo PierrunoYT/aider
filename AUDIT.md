@@ -272,7 +272,7 @@ sentinel, a missing begin sentinel, non-patch content, and surrounding prose.
 
 ---
 
-### [Medium] Dry-run validation mutates the filesystem before authorization
+### Resolved: [Medium] Dry-run validation mutates the filesystem before authorization
 
 **Location:** `patch/coders/base_coder.py:2296-2304`; `patch/coders/editblock_coder.py:38-74,364-383`
 
@@ -288,6 +288,14 @@ sentinel, a missing begin sentinel, non-patch content, and surrounding prose.
 if not fname.exists() and not before_text.strip():
     content = ""
 ```
+
+**Status:** Resolved as suggested. Neither `do_replace()` creates the file any
+more, in `editblock_coder.py` or `udiff_coder.py`; both start from empty content
+and leave creation to the write path, which a dry run never reaches. The failed
+edit report also tolerates a file that does not exist.
+`tests/basic/test_editblock.py::TestDryRunIsPure` and
+`tests/basic/test_udiff.py::TestUnifiedDiffDryRun` check that a dry run creates
+nothing and that a real run still creates the file.
 
 **Confidence:** High
 
