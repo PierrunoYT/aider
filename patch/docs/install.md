@@ -15,6 +15,15 @@ Run `python -m pip install --upgrade patch-code` to upgrade. Update notices do n
 install anything automatically. Use `python -m patch` to avoid the Unix `patch`
 utility. For source development see [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
+Patch declares its direct dependencies with a lower bound at the version it is
+tested against, so it installs alongside your other packages. To reproduce the
+exact set Patch is tested with, install with the lock as a constraint from a
+source checkout:
+
+```bash
+python -m pip install -c requirements.txt .
+```
+
 ## Interactive help
 
 ```bash

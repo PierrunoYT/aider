@@ -40,7 +40,7 @@ COPY . /tmp/patch
 
 # Install dependencies as root
 RUN /venv/bin/python -m pip install --upgrade --no-cache-dir pip && \
-    /venv/bin/python -m pip install --no-cache-dir /tmp/patch[help,browser,playwright] boto3 \
+    /venv/bin/python -m pip install --no-cache-dir -c /tmp/patch/requirements/common-constraints.txt /tmp/patch[help,browser,playwright] boto3 \
        --extra-index-url https://download.pytorch.org/whl/cpu && \
     rm -rf /tmp/patch
 
@@ -64,7 +64,7 @@ COPY . /tmp/patch
 
 # Install dependencies as root
 RUN /venv/bin/python -m pip install --upgrade --no-cache-dir pip && \
-    /venv/bin/python -m pip install --no-cache-dir /tmp/patch[playwright] boto3 google-cloud-aiplatform \
+    /venv/bin/python -m pip install --no-cache-dir -c /tmp/patch/requirements/common-constraints.txt /tmp/patch[playwright] boto3 google-cloud-aiplatform \
        --extra-index-url https://download.pytorch.org/whl/cpu && \
     rm -rf /tmp/patch
 

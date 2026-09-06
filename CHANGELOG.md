@@ -14,6 +14,11 @@ separately in [HISTORY.md](HISTORY.md).
 
 - Adopt Keep a Changelog formatting and document the Semantic Versioning policy
   for future releases.
+- Publish direct dependencies with a lower bound at the tested version instead of
+  the full lock of about 112 exact pins, so installing `patch-code` no longer pins
+  unrelated packages in a shared environment. The locks remain for reproducible
+  installs, `pip install -c requirements.txt .`, which is what CI and the Docker
+  images now use.
 
 ### Security
 

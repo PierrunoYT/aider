@@ -664,7 +664,7 @@ artifact review; this resolves version disagreement, not release authorization.
 
 ---
 
-### [Medium] Published metadata exposes the full exact dependency lock
+### Resolved: [Medium] Published metadata exposes the full exact dependency lock
 
 **Location:** `pyproject.toml:29-36`; `requirements.txt`
 
@@ -673,6 +673,16 @@ artifact review; this resolves version disagreement, not release authorization.
 **Impact:** Installing `patch-code` into a shared Python environment can force exact versions of unrelated transitive packages, create resolver conflicts with other applications, and require a Patch release for every transitive security update.
 
 **Recommendation:** Keep a reproducible lock for tested application environments, but publish reviewed direct dependencies with compatible lower/upper bounds. Validate both the locked standalone installation and resolution alongside representative packages.
+
+**Status:** Resolved as recommended. `pyproject.toml` now declares the direct
+dependencies statically, each with a lower bound at the version Patch is tested
+against and the caps that have a reason, rather than reading the compiled lock. A
+built wheel carries 60 `Requires-Dist` entries instead of about 112 exact pins of
+the whole transitive closure. The locks stay in place and are used where
+reproducibility matters: CI installs with `-c requirements.txt` and the Docker
+images with `-c requirements/common-constraints.txt`.
+`tests/basic/test_requirements.py` checks that every published bound is satisfied
+by a locked version and that no direct requirement is missing from the metadata.
 
 **Confidence:** High
 

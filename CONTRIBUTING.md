@@ -278,6 +278,13 @@ The script uses universal resolution starting at Python 3.10, preserving Python 
 platform markers in the base requirements and every optional extra. Keep compatibility
 rules in the `.in` files rather than editing generated pins or appending overrides.
 
+The compiled files are the tested lock, used by CI, Docker, and anyone who wants
+the exact set. What the published package declares is the direct dependency list in
+`pyproject.toml`, with a lower bound at the tested version, so installing Patch
+does not pin someone else's environment to a whole transitive closure. Add a new
+direct dependency in both places; `tests/basic/test_requirements.py` fails if they
+drift apart.
+
 You can also pass arguments to `pip-compile.sh`, which will flow through to `uv pip compile`. For example:
 
 ```
