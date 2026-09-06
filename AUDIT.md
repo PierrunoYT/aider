@@ -379,7 +379,7 @@ path shares the same `finally`.
 
 ---
 
-### [Medium] OAuth API key file may be world-readable
+### Resolved: [Medium] OAuth API key file may be world-readable
 
 **Location:** `patch/onboarding.py:357-368`; `patch/main.py:369-382`
 
@@ -388,6 +388,13 @@ path shares the same `finally`.
 **Impact:** Other local users can read a reusable API credential on multi-user systems.
 
 **Recommendation:** Create `~/.patch` as `0700`, create the key file atomically as `0600`, and tighten existing permissions before writing.
+
+**Status:** Resolved as recommended. `append_private_line()` creates `~/.patch` as
+`0700`, opens the key file with mode `0600`, and tightens the mode of a file and
+directory that already exist before appending. Windows, which has no POSIX modes,
+skips the mode changes and still writes the key.
+`tests/basic/test_onboarding.py::TestAppendPrivateLine` covers the append, the new
+file, and tightening an existing `0644` file in a `0755` directory.
 
 **Confidence:** High
 

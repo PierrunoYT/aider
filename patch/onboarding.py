@@ -6,6 +6,7 @@ import secrets
 import socketserver
 import threading
 import webbrowser
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -209,6 +210,40 @@ def exchange_code_for_key(code, code_verifier, io):
         return None
 
 
+def append_private_line(path, line):
+    """Append a line to a file only this user can read, and return its path.
+
+    The file holds an API key, so neither it nor its directory may be readable
+    by other local users, including when they already exist.
+    """
+
+    path = Path(path)
+    directory = path.parent
+
+    directory.mkdir(parents=True, exist_ok=True)
+    try:
+        directory.chmod(0o700)
+    except OSError:
+        # Windows and some filesystems do not support this
+        pass
+
+    fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    try:
+        try:
+            os.fchmod(fd, 0o600)
+        except (AttributeError, OSError):
+            pass
+
+        with os.fdopen(fd, "a", encoding="utf-8") as f:
+            fd = None
+            f.write(line)
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+    return str(path)
+
+
 # How long to wait for the browser callback, how often the callback server
 # checks whether it was asked to stop, and how long the flow waits for its
 # thread to finish afterwards.
@@ -368,11 +403,10 @@ def start_openrouter_oauth_flow(io, analytics):
 
         # Save the key to the oauth-keys.env file
         try:
-            config_dir = os.path.expanduser("~/.patch")
-            os.makedirs(config_dir, exist_ok=True)
-            key_file = os.path.join(config_dir, "oauth-keys.env")
-            with open(key_file, "a", encoding="utf-8") as f:
-                f.write(f'OPENROUTER_API_KEY="{api_key}"\n')
+            append_private_line(
+                os.path.join(os.path.expanduser("~/.patch"), "oauth-keys.env"),
+                f'OPENROUTER_API_KEY="{api_key}"\n',
+            )
 
             io.tool_warning("Patch will load the OpenRouter key automatically in future sessions.")
             io.tool_output()

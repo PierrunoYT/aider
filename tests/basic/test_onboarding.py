@@ -2,15 +2,20 @@ import argparse
 import base64
 import hashlib
 import os
+import shutil
 import socket
+import stat
+import tempfile
 import time
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import requests
 
 # Import the functions to be tested
 from patch.onboarding import (
+    append_private_line,
     check_openrouter_tier,
     exchange_code_for_key,
     find_available_port,
@@ -434,6 +439,47 @@ class TestOnboarding(unittest.TestCase):
 
     # --- More complex test for start_openrouter_oauth_flow (simplified) ---
     # This test focuses on the successful path, mocking heavily
+
+
+class TestAppendPrivateLine(unittest.TestCase):
+    """The saved OAuth key must not be readable by other local users."""
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tempdir, ignore_errors=True)
+        self.key_file = Path(self.tempdir) / "config" / "oauth-keys.env"
+
+    def mode(self, path):
+        return stat.S_IMODE(os.stat(path).st_mode)
+
+    def test_writes_the_line(self):
+        append_private_line(self.key_file, 'OPENROUTER_API_KEY="one"\n')
+        append_private_line(self.key_file, 'OPENROUTER_API_KEY="two"\n')
+
+        self.assertEqual(
+            self.key_file.read_text(),
+            'OPENROUTER_API_KEY="one"\nOPENROUTER_API_KEY="two"\n',
+        )
+
+    @unittest.skipIf(os.name == "nt", "Windows does not use POSIX file modes")
+    def test_the_file_and_directory_are_private(self):
+        append_private_line(self.key_file, 'OPENROUTER_API_KEY="one"\n')
+
+        self.assertEqual(self.mode(self.key_file), 0o600)
+        self.assertEqual(self.mode(self.key_file.parent), 0o700)
+
+    @unittest.skipIf(os.name == "nt", "Windows does not use POSIX file modes")
+    def test_permissions_of_an_existing_file_are_tightened(self):
+        self.key_file.parent.mkdir(parents=True)
+        self.key_file.write_text('OPENROUTER_API_KEY="old"\n')
+        os.chmod(self.key_file, 0o644)
+        os.chmod(self.key_file.parent, 0o755)
+
+        append_private_line(self.key_file, 'OPENROUTER_API_KEY="new"\n')
+
+        self.assertEqual(self.mode(self.key_file), 0o600)
+        self.assertEqual(self.mode(self.key_file.parent), 0o700)
+        self.assertIn('OPENROUTER_API_KEY="old"', self.key_file.read_text())
 
 
 class TestOAuthServerShutdown(unittest.TestCase):

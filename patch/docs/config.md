@@ -41,6 +41,8 @@ line. To honor a specific repository's own configuration, run it with
 
 Provider credentials retain their own names, such as `ANTHROPIC_API_KEY` and
 `OPENAI_API_KEY`. Store them in your shell environment or an untracked `.env` file.
+A key obtained through the OpenRouter sign-in is written to
+`~/.patch/oauth-keys.env`, which Patch keeps readable only by you.
 Use `--env-file FILE` to select an environment file. YAML `api-key` entries and
 `--api-key provider=KEY` also support providers beyond OpenAI and Anthropic.
 `--set-env NAME=value` sets other provider variables.

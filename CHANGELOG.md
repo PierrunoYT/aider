@@ -55,6 +55,9 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Keep the OpenRouter key saved by the sign-in flow readable only by you.
+  `~/.patch` is created as `0700` and `oauth-keys.env` as `0600`, and existing
+  permissions are tightened before the key is appended.
 - Release the local OpenRouter sign-in port when the browser wait runs out. The
   callback server stayed bound until the process exited, which could block a later
   attempt.
