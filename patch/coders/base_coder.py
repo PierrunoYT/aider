@@ -2214,6 +2214,10 @@ class Coder:
             self.check_for_dirty_commit(path)
             return True
 
+        if full_path in self.abs_read_only_fnames:
+            self.io.tool_error(f"Skipping edits to {path}, which was added read-only.")
+            return
+
         if not self.path_in_root(full_path):
             # Only files the user added themselves are editable outside the
             # project, and those took the branch above.
@@ -2289,6 +2293,11 @@ class Coder:
         self.io.tool_warning(urls.edit_errors)
         self.warning_given = True
 
+    def get_edit_paths(self, edit):
+        """Every path this edit writes, so all of them get authorized."""
+
+        return [edit[0]]
+
     def prepare_to_edit(self, edits):
         res = []
         seen = dict()
@@ -2302,11 +2311,16 @@ class Coder:
                 continue
             if path == "python":
                 dump(edits)
-            if path in seen:
-                allowed = seen[path]
-            else:
-                allowed = self.allowed_to_edit(path)
-                seen[path] = allowed
+
+            allowed = True
+            for path in self.get_edit_paths(edit):
+                if path is None:
+                    continue
+                if path not in seen:
+                    seen[path] = self.allowed_to_edit(path)
+                if not seen[path]:
+                    allowed = False
+                    break
 
             if allowed:
                 res.append(edit)

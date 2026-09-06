@@ -8,8 +8,7 @@ Strengths include a clear CLI entry point, understandable component boundaries, 
 
 An independent Claude Opus 5 re-audit was reconciled into this report. It confirmed the path-move finding, disproved the original wheel-content finding, and identified additional high-priority trust-boundary and data-loss issues. The most important remaining problems are:
 
-1. Patch-format moves can overwrite arbitrary writable paths without destination authorization.
-2. Malformed whole-file and patch responses can be applied rather than rejected, risking silent data loss.
+1. Malformed whole-file and patch responses can be applied rather than rejected, risking silent data loss.
 
 These have since been fixed on `main`, each with regression tests, and their
 findings below carry the details:
@@ -21,6 +20,7 @@ findings below carry the details:
 - The GUI binds to loopback and gives each browser session its own state and coder
   (issue #1352).
 - Model-requested edits are contained to the project root (issue #1351).
+- Patch-format moves authorize their destination and confirm overwrites (issue #1350).
 
 Additional material risks include known-vulnerable dependencies, filesystem mutation during dry-run validation, incorrect accounting after partial edit failures, OAuth and voice resource leaks, and non-hermetic CI.
 
@@ -93,7 +93,7 @@ undecodable entry, and a malformed record.
 
 ---
 
-### [High] Patch moves bypass destination authorization
+### Resolved: [High] Patch moves bypass destination authorization
 
 **Location:** `patch/coders/patch_coder.py:318-351,603-627`; `patch/coders/base_coder.py:2191-2240,2269-2304`
 
@@ -117,6 +117,15 @@ if not all(self.allowed_to_edit(path) for path in paths):
 ```
 
 Add regression tests for absolute paths, `../` traversal, symlinks, read-only files, declined destinations, and existing targets.
+
+**Status:** Resolved. `prepare_to_edit()` now authorizes every path an edit writes,
+through a `get_edit_paths()` hook that `PatchCoder` overrides to include
+`move_path`, so a destination passes the same containment, gitignore, and approval
+checks as a source. `allowed_to_edit()` also refuses files added read-only.
+Overwriting a destination that existed before the patch was parsed needs an
+explicit yes, which `--yes-always` does not give, rather than a warning.
+`tests/basic/test_patch_coder.py` covers a move inside the root, one that escapes
+it, one onto a read-only file, and a declined and an approved overwrite.
 
 **Confidence:** High
 

@@ -17,6 +17,10 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Security
 
+- Authorize the destination of a `patch`-format move, not just its source, and ask
+  separately before overwriting a file that already exists there. `--yes-always`
+  does not answer that question. A move onto a read-only file, or one that resolves
+  outside the project, is refused.
 - Refuse model-requested edits to paths that resolve outside the project, whether
   through `../` segments or an absolute path, and report the resolved location.
   Files you added yourself stay editable wherever they are. Previously such a path

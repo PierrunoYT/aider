@@ -36,6 +36,9 @@ class PatchAction:
     # For UPDATE:
     chunks: List[Chunk] = field(default_factory=list)
     move_path: Optional[str] = None
+    # Whether move_path named a file that already existed when the patch was
+    # parsed, before authorizing the move could create an empty one.
+    move_overwrites: bool = False
 
 
 # Type alias for the return type of get_edits
@@ -278,6 +281,12 @@ class PatchCoder(Coder):
             # for compatibility with the base Coder's prepare_to_edit method.
             results = []
             for path, action in patch_obj.actions.items():
+                if action.move_path:
+                    # Note this before authorizing the move, which can create an
+                    # empty file at the destination.
+                    action.move_overwrites = pathlib.Path(
+                        self.abs_root_path(action.move_path)
+                    ).exists()
                 results.append((path, action))
             return results
         except DiffError as e:
@@ -546,6 +555,17 @@ class PatchCoder(Coder):
         action = PatchAction(type=ActionType.ADD, path="", new_content="\n".join(added_lines))
         return action, index
 
+    def get_edit_paths(self, edit):
+        # A move writes the destination and removes the source, so both need
+        # authorizing, not just the path the action names.
+        action = edit[1]
+
+        paths = [action.path]
+        if action.move_path:
+            paths.append(action.move_path)
+
+        return paths
+
     def apply_edits(self, edits: List[PatchAction]):
         """
         Applies the parsed PatchActions to the corresponding files.
@@ -609,12 +629,17 @@ class PatchCoder(Coder):
                         self.io.tool_output(
                             f"Updating and moving {action.path} to {action.move_path}"
                         )
-                        # Check if target exists before overwriting/moving
-                        if target_path_obj.exists() and full_path != target_full_path:
-                            self.io.tool_warning(
-                                "UPDATE Warning: Target file for move already exists, overwriting:"
-                                f" {action.move_path}"
-                            )
+                        # Overwriting the destination destroys whatever is there,
+                        # so ask for it separately from the edit itself.
+                        if action.move_overwrites and full_path != target_full_path:
+                            if not self.io.confirm_ask(
+                                "Overwrite existing file with the moved file?",
+                                subject=action.move_path,
+                                explicit_yes_required=True,
+                            ):
+                                raise DiffError(
+                                    f"Move to existing file declined: {action.move_path}"
+                                )
                     else:
                         self.io.tool_output(f"Updating {action.path}")
 

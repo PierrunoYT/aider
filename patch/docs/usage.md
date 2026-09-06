@@ -17,7 +17,11 @@ Use `/tokens` to inspect context usage.
 Model-requested edits stay inside the project. A path that resolves outside it,
 through `../` or an absolute path, is refused, and Patch prints the resolved
 location. Files you added yourself with `/add` or on the command line remain
-editable wherever they live.
+editable wherever they live. Files added with `/read` are never edited.
+
+The `patch` edit format can move a file. Its destination is authorized like any
+other edit, and overwriting an existing file at the destination needs an explicit
+yes, which `--yes-always` does not give.
 
 ## Large repositories
 
