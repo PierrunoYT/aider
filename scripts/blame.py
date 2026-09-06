@@ -13,16 +13,16 @@ import yaml
 from tqdm import tqdm
 
 website_files = [
-    "aider/website/index.html",
-    "aider/website/share/index.md",
-    "aider/website/_includes/head_custom.html",
-    "aider/website/_includes/home.css",
-    "aider/website/docs/leaderboards/index.md",
+    "patch/website/index.html",
+    "patch/website/share/index.md",
+    "patch/website/_includes/head_custom.html",
+    "patch/website/_includes/home.css",
+    "patch/website/docs/leaderboards/index.md",
 ]
 
 exclude_files = [
-    "aider/website/install.ps1",
-    "aider/website/install.sh",
+    "patch/website/install.ps1",
+    "patch/website/install.sh",
 ]
 
 
@@ -40,7 +40,7 @@ def blame(start_tag, end_tag=None):
         for f in files
         if f.endswith((".js", ".py", ".scm", ".sh", "Dockerfile", "Gemfile"))
         or (f.startswith(".github/workflows/") and f.endswith(".yml"))
-        or (f.startswith("aider/resources/") and f.endswith(".yml"))
+        or (f.startswith("patch/resources/") and f.endswith(".yml"))
         or f in website_files
         or f in test_files
     ]
@@ -50,22 +50,22 @@ def blame(start_tag, end_tag=None):
 
     all_file_counts = {}
     grand_total = defaultdict(int)
-    aider_total = 0
+    patch_total = 0
     for file in files:
         file_counts = get_counts_for_file(start_tag, end_tag, authors, file)
         if file_counts:
             all_file_counts[file] = file_counts
             for author, count in file_counts.items():
                 grand_total[author] += count
-                if "(aider)" in author.lower():
-                    aider_total += count
+                if "(patch)" in author.lower() or "(aider)" in author.lower():
+                    patch_total += count
 
     total_lines = sum(grand_total.values())
-    aider_percentage = (aider_total / total_lines) * 100 if total_lines > 0 else 0
+    patch_percentage = (patch_total / total_lines) * 100 if total_lines > 0 else 0
 
     end_date = get_tag_date(end_tag if end_tag else "HEAD")
 
-    return all_file_counts, grand_total, total_lines, aider_total, aider_percentage, end_date
+    return all_file_counts, grand_total, total_lines, patch_total, patch_percentage, end_date
 
 
 def get_all_commit_hashes_between_tags(start_tag, end_tag=None):
@@ -95,7 +95,10 @@ def get_commit_authors(commits):
         lower_subject = subject.lower()
         lower_full = full_message.lower()
 
-        if lower_subject.startswith("aider:") or "co-authored-by: aider" in lower_full:
+        if lower_subject.startswith("patch:") or "co-authored-by: patch" in lower_full:
+            author += " (patch)"
+        elif lower_subject.startswith("aider:") or "co-authored-by: aider" in lower_full:
+            # Preserve attribution for commits made before the project rename.
             author += " (aider)"
         commit_to_author[commit] = author
     return commit_to_author
@@ -111,7 +114,7 @@ def process_all_tags_since(start_tag):
     results = []
     for i in tqdm(range(len(tags) - 1), desc="Processing tags"):
         start_tag, end_tag = tags[i], tags[i + 1]
-        all_file_counts, grand_total, total_lines, aider_total, aider_percentage, end_date = blame(
+        all_file_counts, grand_total, total_lines, patch_total, patch_percentage, end_date = blame(
             start_tag, end_tag
         )
         results.append(
@@ -127,8 +130,11 @@ def process_all_tags_since(start_tag):
                     )
                 },
                 "total_lines": total_lines,
-                "aider_total": aider_total,
-                "aider_percentage": round(aider_percentage, 2),
+                "patch_total": patch_total,
+                "patch_percentage": round(patch_percentage, 2),
+                # Legacy aliases retained for existing blame-data consumers.
+                "aider_total": patch_total,
+                "aider_percentage": round(patch_percentage, 2),
             }
         )
     return results
@@ -143,14 +149,14 @@ def get_latest_version_tag():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Get aider/non-aider blame stats")
+    parser = argparse.ArgumentParser(description="Get Patch/non-Patch blame stats")
     parser.add_argument("start_tag", nargs="?", help="The tag to start from (optional)")
     parser.add_argument("--end-tag", help="The tag to end at (default: HEAD)", default=None)
     parser.add_argument(
         "--all-since",
         action="store_true",
         help=(
-            "Find all tags since the specified tag and print aider percentage between each pair of"
+            "Find all tags since the specified tag and print Patch percentage between each pair of"
             " successive tags"
         ),
     )
@@ -192,7 +198,7 @@ def main():
 
         yaml_output = yaml.dump(existing_results, sort_keys=True)
     else:
-        all_file_counts, grand_total, total_lines, aider_total, aider_percentage, end_date = blame(
+        all_file_counts, grand_total, total_lines, patch_total, patch_percentage, end_date = blame(
             args.start_tag, args.end_tag
         )
 
@@ -206,8 +212,11 @@ def main():
                 for author, count in sorted(grand_total.items(), key=itemgetter(1), reverse=True)
             },
             "total_lines": total_lines,
-            "aider_total": aider_total,
-            "aider_percentage": round(aider_percentage, 2),
+            "patch_total": patch_total,
+            "patch_percentage": round(patch_percentage, 2),
+            # Legacy aliases retained for existing blame-data consumers.
+            "aider_total": patch_total,
+            "aider_percentage": round(patch_percentage, 2),
         }
 
         yaml_output = yaml.dump(result, sort_keys=True)
@@ -219,7 +228,7 @@ def main():
         print(yaml_output)
 
     if not args.all_since:
-        print(f"- Aider wrote {round(aider_percentage)}% of the code in this release.")
+        print(f"- Patch wrote {round(patch_percentage)}% of the code in this release.")
 
 
 def get_counts_for_file(start_tag, end_tag, authors, fname):

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="300" viewBox="0 0 840 300" role="img" aria-labelledby="title description">
+  <title id="title">Patch — single tile logo</title>
+  <desc id="description">One mint rounded-square tile with a plus-shaped cutout, alongside the white Patch wordmark on charcoal.</desc>
+
+  <rect id="background" width="840" height="300" rx="32" fill="#11151C"/>
+
+  <!-- Center the complete lockup, preserving the gap between icon and wordmark. -->
+  <g id="lockup" transform="translate(46.82 0)">
+    <!-- A single silhouette with a true vector cutout. -->
+    <path id="symbol" fill="#70EDBF" fill-rule="evenodd"
+          d="M128 76H220Q248 76 248 104V196Q248 224 220 224H128Q100 224 100 196V104Q100 76 128 76Z
+             M164 106H184V140H218V160H184V194H164V160H130V140H164Z"/>
+
+    <text id="wordmark" x="306" y="202" fill="#F3F4F7"
+          font-family="Inter, Arial, Helvetica, sans-serif" font-size="136"
+          font-weight="700" letter-spacing="-6" textLength="340.36"
+          lengthAdjust="spacingAndGlyphs">Patch</text>
+  </g>
+</svg>

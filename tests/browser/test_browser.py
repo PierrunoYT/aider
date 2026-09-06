@@ -2,13 +2,13 @@ import os
 import unittest
 from unittest.mock import patch
 
-from aider.main import main
+from patch.main import main
 
 
 class TestBrowser(unittest.TestCase):
-    @patch("aider.main.launch_gui")
+    @patch("patch.main.launch_gui")
     def test_browser_flag_imports_streamlit(self, mock_launch_gui):
-        os.environ["AIDER_ANALYTICS"] = "false"
+        os.environ["PATCH_ANALYTICS"] = "false"
 
         # Run main with --browser and --yes flags
         main(["--browser", "--yes"])

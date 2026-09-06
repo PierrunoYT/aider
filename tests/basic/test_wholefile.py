@@ -5,11 +5,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from aider.coders import Coder
-from aider.coders.wholefile_coder import WholeFileCoder
-from aider.dump import dump  # noqa: F401
-from aider.io import InputOutput
-from aider.models import Model
+from patch.coders import Coder
+from patch.coders.wholefile_coder import WholeFileCoder
+from patch.dump import dump  # noqa: F401
+from patch.io import InputOutput
+from patch.models import Model
 
 
 class TestWholeFileCoder(unittest.TestCase):

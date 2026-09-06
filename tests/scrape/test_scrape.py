@@ -2,9 +2,9 @@ import time
 import unittest
 from unittest.mock import MagicMock
 
-from aider.commands import Commands
-from aider.io import InputOutput
-from aider.scrape import Scraper
+from patch.commands import Commands
+from patch.io import InputOutput
+from patch.scrape import Scraper
 
 
 class TestScrape(unittest.TestCase):

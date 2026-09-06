@@ -1,0 +1,275 @@
+---
+layout: none
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patch - AI Pair Programming in Your Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap&text=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,/()%25&display=fallback">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap&display=fallback">
+    <link rel="stylesheet" href="/assets/home.css">
+    <!-- Add Prism.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <!-- Material Design Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo" id="logo-container">patch</a>
+                <div class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#getting-started">Getting Started</a>
+                    <a href="/docs/">Documentation</a>
+                    <a href="https://discord.gg/Y7X7bhMQFV">Discord</a>
+                    <a href="https://github.com/PierrunoYT/patch">GitHub</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+    
+    <section class="hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <h1>AI pair programming in your terminal</h1>
+                    <p>
+                        Patch lets you pair program with LLMs to start
+                        a new project or build on your existing
+                        codebase.
+                    </p>
+                    
+                    <div class="buttons">
+                        <a href="#getting-started" class="btn btn-primary">Get Started</a>
+                        <a href="/docs/" class="btn btn-secondary">Documentation</a>
+                    </div>
+                </div>
+                
+                <div class="hero-video">
+                    <div class="video-container">
+                        <video autoplay loop muted playsinline preload="metadata">
+                            <source src="/assets/shell-cmds-small.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+    
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Features</h2>
+            <div class="feature-grid">
+                <a href="/docs/llms.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-brain feature-icon"></i>
+                        <h3 class="feature-title">
+                            Cloud and local LLMs
+                        </h3>
+                    </div>
+                    <p>Patch works best with Claude 3.7 Sonnet, DeepSeek R1 & Chat V3, OpenAI o1, o3-mini & GPT-4o, but can connect to almost any LLM, including local models.</p>
+                </a>
+                <a href="/docs/repomap.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-map-outline feature-icon"></i>
+                        <h3 class="feature-title">Maps your codebase</h3>
+                    </div>
+                    <p>
+                        Patch makes a map of your entire codebase,
+                        which helps it work well in larger projects.
+                    </p>
+                </a>
+                <a href="/docs/languages.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-code-tags feature-icon"></i>
+                        <h3 class="feature-title">100+ code languages</h3>
+                    </div>
+                    <p>
+                        Patch works with most popular programming
+                        languages: python, javascript, rust, ruby, go, cpp,
+                        php, html, css, and dozens more.
+                    </p>
+                </a>
+                <a href="/docs/git.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-source-branch feature-icon"></i>
+                        <h3 class="feature-title">Git integration</h3>
+                    </div>
+                    <p>
+                        Patch automatically commits changes with
+                        sensible commit messages.
+                        Use familiar git tools to easily
+                        diff, manage and undo AI changes.
+                    </p>
+                </a>
+                <a href="/docs/usage/watch.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-monitor feature-icon"></i>
+                        <h3 class="feature-title">In your IDE</h3>
+                    </div>
+                    <p>
+                        Use patch from within your favorite IDE or editor.
+                        Ask for changes by adding comments to
+                        your code and patch will get to work.
+                    </p>
+                </a>
+                <a href="/docs/usage/images-urls.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-image-multiple feature-icon"></i>
+                        <h3 class="feature-title">Images & web pages</h3>
+                    </div>
+                    <p>
+                        Add images and web pages to the chat to
+                        provide visual context, screenshots, reference docs,
+                        etc.
+                    </p>
+                </a>
+                <a href="/docs/usage/voice.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-microphone feature-icon"></i>
+                        <h3 class="feature-title">Voice-to-code</h3>
+                    </div>
+                    <p>
+                        Speak with patch about your code! Request new features, 
+                        test cases or bug fixes using your voice and let patch
+                        implement the changes.
+                    </p>
+                </a>
+                <a href="/docs/usage/lint-test.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-check-all feature-icon"></i>
+                        <h3 class="feature-title">Linting & testing</h3>
+                    </div>
+                    <p>
+                        Automatically lint and test your code every time patch makes changes.
+                        Patch can fix problems detected by your linters and test suites.
+                    </p>
+                </a>
+                <a href="/docs/usage/copypaste.html" class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="mdi mdi-content-copy feature-icon"></i>
+                        <h3 class="feature-title">Copy/paste to web chat</h3>
+                    </div>
+                    <p>
+                        Patch works best with LLM APIs,
+                        but it can also work an LLM via its web chat interface.
+                        Patch streamlines copy/pasting code
+                        back and forth with a browser.
+                    </p>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <section class="models" id="getting-started">
+        <div class="container">
+            <h2 class="section-title">Getting Started</h2>
+            <div class="info-content">
+                <div class="code-block">
+                    <pre><code class="language-bash">python -m pip install patch-code
+
+# Change directory into your codebase
+cd /to/your/project
+
+# DeepSeek
+patch --model deepseek --api-key deepseek=&lt;key&gt;
+
+# Claude 3.7 Sonnet
+patch --model sonnet --api-key anthropic=&lt;key&gt;
+
+# o3-mini
+patch --model o3-mini --api-key openai=&lt;key&gt;</code></pre>
+                </div>
+                <div class="cta-container">
+                  <p class="cta-text">Want more details?</p>
+                  <div class="cta-buttons">
+                    <a href="/docs/install.html" class="btn btn-secondary">Installation Guide</a>
+                    <a href="/docs/usage.html" class="btn btn-secondary">Usage Guide</a>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="info-section" id="more-info">
+        <div class="container">
+            <h2 class="section-title">More Information</h2>
+            <div class="info-columns">
+                <div class="info-column">
+                    <h3 class="info-column-title">Documentation</h3>
+                    <p class="info-column-desc">Everything you need to get started and make the most of Patch</p>
+                    <ul class="info-list">
+                        <li><a href="/docs/install.html">Installation Guide</a></li>
+                        <li><a href="/docs/install.html">Usage Guide</a></li>
+                        <li><a href="/docs/usage/tutorials.html">Tutorial Videos</a></li>
+                        <li><a href="/docs/llms.html">Connecting to LLMs</a></li>
+                        <li><a href="/docs/config.html">Configuration Options</a></li>
+                        <li><a href="/docs/troubleshooting.html">Troubleshooting</a></li>
+                        <li><a href="/docs/faq.html">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="info-column">
+                    <h3 class="info-column-title">Community & Resources</h3>
+                    <p class="info-column-desc">Connect with other users and find additional resources</p>
+                    <ul class="info-list">
+                        <li><a href="/docs/leaderboards/">LLM Leaderboards</a></li>
+                        <li><a href="https://github.com/PierrunoYT/patch">GitHub Repository</a></li>
+                        <li><a href="https://discord.gg/Y7X7bhMQFV">Discord Community</a></li>
+                        <li><a href="https://aider.chat/HISTORY.html">Release notes</a></li>
+                        <li><a href="/blog/">Blog</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="/docs/install.html">Documentation</a>
+                <a href="https://github.com/PierrunoYT/patch">GitHub</a>
+                <a href="https://discord.gg/Y7X7bhMQFV">Discord</a>
+                <a href="/blog/">Blog</a>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Add Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <!-- Logo Progressive Enhancement -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoContainer = document.getElementById('logo-container');
+            const textContent = logoContainer.textContent; // Save the text for fallback
+            
+            // Create new image element
+            const logoImg = new Image();
+            logoImg.src = '/assets/logo.svg';
+            logoImg.alt = 'Patch Logo';
+            logoImg.style.height = '3rem';
+            logoImg.style.verticalAlign = 'middle';
+            
+            // Only replace if image loads successfully
+            logoImg.onload = function() {
+                logoContainer.textContent = ''; // Clear text
+                logoContainer.appendChild(logoImg);
+            };
+            
+            // If image fails to load, do nothing (keep the text)
+            logoImg.onerror = function() {
+                console.log('SVG logo failed to load, keeping text fallback');
+            };
+        });
+    </script>
+</body>
+</html>

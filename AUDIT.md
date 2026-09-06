@@ -8,7 +8,7 @@ Strengths include a clear CLI entry point, understandable component boundaries, 
 
 An independent Claude Opus 5 re-audit was reconciled into this report. It confirmed the path-move finding, disproved the original wheel-content finding, and identified additional high-priority trust-boundary and data-loss issues. The most important problems are now:
 
-1. Repository-local `.aider.conf.yml` and `.env` files cross into command execution and provider configuration without a repository trust decision.
+1. Repository-local `.patch.conf.yml` and `.env` files cross into command execution and provider configuration without a repository trust decision.
 2. A repository-local diskcache can deserialize attacker-supplied pickle data.
 3. Patch-format moves can overwrite arbitrary writable paths without destination authorization.
 4. Malformed whole-file and patch responses can be applied rather than rejected, risking silent data loss.
@@ -26,11 +26,11 @@ No confirmed Critical issues were found.
 
 ### [High] Untrusted repository configuration reaches command execution and API routing
 
-**Location:** `aider/main.py:43-57,360-381,464-477`; `aider/args.py:534-555`; `aider/linter.py:47-57`; `aider/run_cmd.py:62-73`
+**Location:** `patch/main.py:43-57,360-381,464-477`; `patch/args.py:534-555`; `patch/linter.py:47-57`; `patch/run_cmd.py:62-73`
 
-**Problem:** A repository-root `.aider.conf.yml` is loaded automatically. It can set `lint-cmd`, while `auto-lint` defaults to true, and the configured command reaches `subprocess.Popen(..., shell=True)` after an edit. A repository `.env` is also loaded with `override=True`, allowing it to replace provider endpoint environment variables. `check_config_files_for_yes()` demonstrates that repository configuration is already recognized as a trust boundary, but protects only the `yes:` key.
+**Problem:** A repository-root `.patch.conf.yml` is loaded automatically. It can set `lint-cmd`, while `auto-lint` defaults to true, and the configured command reaches `subprocess.Popen(..., shell=True)` after an edit. A repository `.env` is also loaded with `override=True`, allowing it to replace provider endpoint environment variables. `check_config_files_for_yes()` demonstrates that repository configuration is already recognized as a trust boundary, but protects only the `yes:` key.
 
-**Impact:** Cloning an untrusted repository and allowing Aider to edit a file can execute a command chosen by that repository. A malicious `.env` can redirect compatible model traffic, potentially disclosing API credentials and source context on the first request. The command path was independently reproduced with a marker file.
+**Impact:** Cloning an untrusted repository and allowing Patch to edit a file can execute a command chosen by that repository. A malicious `.env` can redirect compatible model traffic, potentially disclosing API credentials and source context on the first request. The command path was independently reproduced with a marker file.
 
 **Recommendation:** Require an explicit, persistent trust decision keyed by canonical repository path and configuration-file hash before honoring repository-local executable commands or provider/authentication settings. Alternatively, ignore dangerous keys unless `--trust-repo-config` is supplied. User-home configuration can remain trusted.
 
@@ -42,11 +42,11 @@ No confirmed Critical issues were found.
 
 ### [High] Repository-local repomap cache deserializes pickle data
 
-**Location:** `aider/repomap.py:35-43,195-260`
+**Location:** `patch/repomap.py:35-43,195-260`
 
-**Problem:** The tag cache is stored inside the repository as `.aider.tags.cache.v4` and opened with `diskcache.Cache`. Complex values are pickle-serialized. Reading a crafted value from the cache executes pickle reduction code before application-level validation. Handling catches SQLite errors but not deserialization or schema errors.
+**Problem:** The tag cache is stored inside the repository as `.patch.tags.cache.v4` and opened with `diskcache.Cache`. Complex values are pickle-serialized. Reading a crafted value from the cache executes pickle reduction code before application-level validation. Handling catches SQLite errors but not deserialization or schema errors.
 
-**Impact:** A malicious repository can achieve code execution when Aider reads a planted cache if it can predict the checkout's absolute path, which is used as the cache key. Paths are predictable in common Docker and CI layouts. Corrupt non-malicious caches can also crash map generation instead of becoming a cache miss.
+**Impact:** A malicious repository can achieve code execution when Patch reads a planted cache if it can predict the checkout's absolute path, which is used as the cache key. Paths are predictable in common Docker and CI layouts. Corrupt non-malicious caches can also crash map generation instead of becoming a cache miss.
 
 **Evidence:** The Opus re-audit planted a malicious diskcache value and observed its payload execute during `get_tags()`. Exploitability is constrained by the absolute-path cache key but the deserialization mechanism is confirmed.
 
@@ -58,7 +58,7 @@ No confirmed Critical issues were found.
 
 ### [High] Patch moves bypass destination authorization
 
-**Location:** `aider/coders/patch_coder.py:318-351,603-627`; `aider/coders/base_coder.py:2191-2240,2269-2304`
+**Location:** `patch/coders/patch_coder.py:318-351,603-627`; `patch/coders/base_coder.py:2191-2240,2269-2304`
 
 **Problem:** `prepare_to_edit()` authorizes only `edit[0]`, the source path. A patch can independently supply `*** Move to: <destination>`. The destination is resolved and written without passing through `allowed_to_edit()`, containment checks, read-only checks, or overwrite confirmation. `abs_root_path()` also accepts absolute paths and paths resolving outside the repository.
 
@@ -87,7 +87,7 @@ Add regression tests for absolute paths, `../` traversal, symlinks, read-only fi
 
 ### [High] General edit authorization permits paths outside the project root
 
-**Location:** `aider/coders/base_coder.py:566-574,2191-2236`; comparison implementation at `aider/commands.py:1511-1518`
+**Location:** `patch/coders/base_coder.py:566-574,2191-2236`; comparison implementation at `patch/commands.py:1511-1518`
 
 **Problem:** `abs_root_path()` resolves `Path(self.root) / path` but does not enforce containment. Absolute paths discard the root component, and `../` segments resolve outside it. `allowed_to_edit()` then treats the resolved external target as an ordinary new or non-chat file. With `--yes-always`, ordinary confirmations are automatically accepted. In default Git mode, some absolute cases fail incidentally during Git path normalization, but that exception is not a security control.
 
@@ -103,7 +103,7 @@ Add regression tests for absolute paths, `../` traversal, symlinks, read-only fi
 
 ### [High] GUI is unauthenticated, network-exposed, and shares privileged state
 
-**Location:** `aider/main.py:233-268`; `aider/gui.py:51-89,328-369,464-495`
+**Location:** `patch/main.py:233-268`; `patch/gui.py:51-89,328-369,464-495`
 
 **Problem:** `launch_gui()` does not set Streamlit's `server.address`. Streamlit 1.55 defaults this to `None`, which is passed to Tornado and binds all interfaces. The GUI also uses process-wide `@st.cache_resource` instances for both `State` and `Coder`. These contain chat history, prompts, files, repository state, and undo state. The GUI has no application-level authentication and exposes URL fetching and repository editing.
 
@@ -134,9 +134,9 @@ This addresses exposure but not session isolation.
 
 ### Retracted: wheels omit required packages and resources
 
-**Location:** `pyproject.toml:38-42`; `aider/main.py:394`; `aider/models.py:153-158`; `aider/repomap.py:808-823`; `aider/help.py:33-115`
+**Location:** `pyproject.toml:38-42`; `patch/main.py:394`; `patch/models.py:153-158`; `patch/repomap.py:808-823`; `patch/help.py:33-115`
 
-**Problem:** The initial audit inferred that `include = ["aider"]` excluded subpackages. Independent artifact inspection disproved that inference.
+**Problem:** The initial audit inferred that `include = ["patch"]` excluded subpackages. Independent artifact inspection disproved that inference.
 
 **Impact:** None. This is not a valid finding.
 
@@ -150,7 +150,7 @@ This addresses exposure but not session isolation.
 
 ### [High] WholeFileCoder writes truncated content from an unterminated fence
 
-**Location:** `aider/coders/wholefile_coder.py:75-128`; default selection in `aider/models.py:131`
+**Location:** `patch/coders/wholefile_coder.py:75-128`; default selection in `patch/models.py:131`
 
 **Problem:** At end-of-input, `get_edits()` appends an edit whenever `fname` remains set, even if the closing fence was never received. `apply_edits()` then replaces the complete file with the partial accumulated response. The sibling edit-block parser rejects unclosed blocks.
 
@@ -166,7 +166,7 @@ This addresses exposure but not session isolation.
 
 ### [High] PatchCoder accepts patches missing the terminal sentinel
 
-**Location:** `aider/coders/patch_coder.py:229-254,395-410`
+**Location:** `patch/coders/patch_coder.py:229-254,395-410`
 
 **Problem:** Validation of `*** End Patch` is commented out and the parser explicitly tolerates a missing sentinel even though the model contract requires it.
 
@@ -196,7 +196,7 @@ This addresses exposure but not session isolation.
 
 ### [Medium] Dry-run validation mutates the filesystem before authorization
 
-**Location:** `aider/coders/base_coder.py:2296-2304`; `aider/coders/editblock_coder.py:38-74,364-383`
+**Location:** `patch/coders/base_coder.py:2296-2304`; `patch/coders/editblock_coder.py:38-74,364-383`
 
 **Problem:** `apply_updates()` invokes `apply_edits_dry_run()` before `prepare_to_edit()`. The replacement helper executes `fname.touch()` for a proposed new file even during dry-run.
 
@@ -217,11 +217,11 @@ if not fname.exists() and not before_text.strip():
 
 ### [Medium] Partial edit failures report and commit paths that were not changed
 
-**Location:** `aider/coders/base_coder.py:1585-1602,2296-2336`
+**Location:** `patch/coders/base_coder.py:1585-1602,2296-2336`
 
 **Problem:** `edited` is populated from all authorized edits before application. If sequential application partially succeeds and raises, `apply_updates()` returns the precomputed full set. The caller updates bookkeeping and auto-commits that set before checking `reflected_message`.
 
-**Impact:** Failed responses can be reported as editing every requested file. Auto-commit can include pre-existing modifications in a path Aider never changed, especially when dirty pre-commit behavior is disabled.
+**Impact:** Failed responses can be reported as editing every requested file. Auto-commit can include pre-existing modifications in a path Patch never changed, especially when dirty pre-commit behavior is disabled.
 
 **Recommendation:** Validate all edits before writing where possible and return a structured result containing only successfully changed paths plus any error.
 
@@ -231,7 +231,7 @@ if not fname.exists() and not before_text.strip():
 
 ### [Medium] Full-file deletion is treated as a failed edit
 
-**Location:** `aider/coders/editblock_coder.py:41-74`; `aider/coders/udiff_coder.py:69-118`
+**Location:** `patch/coders/editblock_coder.py:41-74`; `patch/coders/udiff_coder.py:69-118`
 
 **Problem:** A successful replacement can produce `""`, but both coders use truthiness to distinguish success from no match.
 
@@ -254,7 +254,7 @@ else:
 
 ### [Medium] OAuth callback listener can survive timeout
 
-**Location:** `aider/onboarding.py:266-336`
+**Location:** `patch/onboarding.py:266-336`
 
 **Problem:** The server blocks in `httpd.handle_request()`. After the five-minute normal timeout, the main thread does not set `shutdown_server`; it only joins for one second.
 
@@ -268,13 +268,13 @@ else:
 
 ### [Medium] OAuth API key file may be world-readable
 
-**Location:** `aider/onboarding.py:357-368`; `aider/main.py:369-382`
+**Location:** `patch/onboarding.py:357-368`; `patch/main.py:369-382`
 
 **Problem:** The OpenRouter key is appended with ordinary `open(..., "a")`. Under a common `022` umask, the directory may be `0755` and file `0644`.
 
 **Impact:** Other local users can read a reusable API credential on multi-user systems.
 
-**Recommendation:** Create `~/.aider` as `0700`, create the key file atomically as `0600`, and tighten existing permissions before writing.
+**Recommendation:** Create `~/.patch` as `0700`, create the key file atomically as `0600`, and tighten existing permissions before writing.
 
 **Confidence:** High
 
@@ -282,7 +282,7 @@ else:
 
 ### [Medium] Voice recordings are not deleted
 
-**Location:** `aider/voice.py:116-180`
+**Location:** `patch/voice.py:116-180`
 
 **Problem:** A temporary WAV is never deleted when WAV is selected. Transcription errors return before cleaning either format, and `tempfile.mktemp()` separates name selection from file creation.
 
@@ -296,7 +296,7 @@ else:
 
 ### [Medium] Core network requests have no timeout
 
-**Location:** `aider/models.py:934-983`; `aider/versioncheck.py:64-95`
+**Location:** `patch/models.py:934-983`; `patch/versioncheck.py:64-95`
 
 **Problem:** Copilot token exchange and PyPI version checking call `requests.get()` without timeouts.
 
@@ -314,9 +314,9 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Medium] Settings and command-line logging expose provider secrets
 
-**Location:** `aider/format_settings.py:1-26`; `aider/main.py:745-751`; `aider/io.py:995-1002`; `aider/args.py:97-112,269-285`
+**Location:** `patch/format_settings.py:1-26`; `patch/main.py:745-751`; `patch/io.py:995-1002`; `patch/args.py:97-112,269-285`
 
-**Problem:** `scrub_sensitive_info()` only masks the dedicated OpenAI and Anthropic key arguments. `--api-key provider=secret` and `--set-env TOKEN=secret` remain visible in `--verbose` and `/settings` output. The raw command line is also logged on every invocation. `tool_output(..., log_only=True)` still appends to `.aider.chat.history.md` before suppressing terminal output.
+**Problem:** `scrub_sensitive_info()` only masks the dedicated OpenAI and Anthropic key arguments. `--api-key provider=secret` and `--set-env TOKEN=secret` remain visible in `--verbose` and `/settings` output. The raw command line is also logged on every invocation. `tool_output(..., log_only=True)` still appends to `.patch.chat.history.md` before suppressing terminal output.
 
 **Impact:** Provider credentials and arbitrary token-like environment values are written in plaintext to a project-local history file, commonly mode `0644`, and can appear in terminals or bug reports. The file is normally gitignored but is not access-controlled.
 
@@ -358,7 +358,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Medium] PatchCoder ADD creates a placeholder and then rejects it
 
-**Location:** `aider/coders/base_coder.py:2206-2224`; `aider/coders/patch_coder.py:550-580`
+**Location:** `patch/coders/base_coder.py:2206-2224`; `patch/coders/patch_coder.py:550-580`
 
 **Problem:** `allowed_to_edit()` authorizes a new file by creating it with `touch_file()`. PatchCoder then requires an ADD target not to exist and raises `ADD Error: File already exists`.
 
@@ -372,7 +372,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Medium] File replacement is non-atomic
 
-**Location:** `aider/io.py:478-507`
+**Location:** `patch/io.py:478-507`
 
 **Problem:** `write_text()` opens the destination with mode `"w"`, truncating it before the new content is completely written. Only permission errors are retried.
 
@@ -386,7 +386,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Medium] History summarization can silently discard unsummarized messages
 
-**Location:** `aider/history.py:45-96`
+**Location:** `patch/history.py:45-96`
 
 **Problem:** The code finds a `split_index` for the retained tail, then separately token-limits `sized_head` into `keep`. Messages between the end of `keep` and `split_index` are neither summarized nor retained.
 
@@ -402,7 +402,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Medium] File watcher lets any local writer initiate an LLM turn
 
-**Location:** `aider/watch.py:80-120,205-265`; `aider/io.py:670-675`
+**Location:** `patch/watch.py:80-120,205-265`; `patch/io.py:670-675`
 
 **Problem:** With `--watch-files`, any process able to modify a watched file can add an `AI!` marker. That interrupts input and returns a generated code-edit prompt as the next user turn without confirmation. Simultaneous `AI!` and `AI?` changes are stored in a set, making selected action order nondeterministic.
 
@@ -416,7 +416,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Medium] Git exception tuple hides ordinary programming errors
 
-**Location:** `aider/repo.py:15-36,295-318` and other `except ANY_GIT_ERROR` call sites
+**Location:** `patch/repo.py:15-36,295-318` and other `except ANY_GIT_ERROR` call sites
 
 **Problem:** `ANY_GIT_ERROR` includes `TypeError`, `ValueError`, `AttributeError`, `AssertionError`, `IndexError`, and `BufferError` in addition to Git and OS failures.
 
@@ -434,7 +434,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 **Problem:** The project supports Python 3.10, and the base dependency metadata retains a Python-version split for NumPy. Compiled extras pin `numpy==2.4.3` unconditionally, which is incompatible with Python 3.10.
 
-**Impact:** Installing `aider-chat[dev]`, `[help]`, or `[browser]` fails on a declared supported Python version. CI installs the base project rather than extras and misses this.
+**Impact:** Installing `patch-code[dev]`, `[help]`, or `[browser]` fails on a declared supported Python version. CI installs the base project rather than extras and misses this.
 
 **Recommendation:** Preserve environment markers when compiling each extra and add resolver/install jobs for every supported Python version and extra combination.
 
@@ -444,7 +444,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Medium] Manual untagged release builds can derive an invalid project version
 
-**Location:** `pyproject.toml:44-49`; `aider/__init__.py:3-18`; `.github/workflows/release.yml:3-34`
+**Location:** `pyproject.toml:44-49`; `patch/__init__.py:3-18`; `.github/workflows/release.yml:3-34`
 
 **Problem:** This fork's remote has no tags. `setuptools_scm` therefore derives a version such as `0.1.dev...`, while runtime `safe_version` is `0.86.3.dev`. Tag-triggered builds would derive from a newly pushed tag, but the release workflow also allows manual dispatch from an untagged ref.
 
@@ -462,7 +462,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 **Problem:** The distribution's runtime dependencies are read directly from an application lock containing roughly 110 exact `==` pins, including the complete transitive closure. This lock is useful for CI and containers but unusually restrictive as published package metadata.
 
-**Impact:** Installing `aider-chat` into a shared Python environment can force exact versions of unrelated transitive packages, create resolver conflicts with other applications, and require an Aider release for every transitive security update.
+**Impact:** Installing `patch-code` into a shared Python environment can force exact versions of unrelated transitive packages, create resolver conflicts with other applications, and require a Patch release for every transitive security update.
 
 **Recommendation:** Keep a reproducible lock for tested application environments, but publish reviewed direct dependencies with compatible lower/upper bounds. Validate both the locked standalone installation and resolution alongside representative packages.
 
@@ -488,7 +488,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 **Location:** `CONTRIBUTING.md:156-170,187-216`; `pyproject.toml:20`; `pytest.ini:4-8`
 
-**Problem:** The guide says Python 3.9–3.12 while metadata targets 3.10–3.14, says tests live in `aider/tests`, and references requirement files at incorrect paths.
+**Problem:** The guide says Python 3.9–3.12 while metadata targets 3.10–3.14, says tests live in `patch/tests`, and references requirement files at incorrect paths.
 
 **Impact:** Contributors can use unsupported versions, run invalid commands, or place tests incorrectly.
 
@@ -500,7 +500,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Low] Documentation-site dependencies are not reproducibly locked
 
-**Location:** `aider/website/Gemfile:1-8`; `.gitignore:9`; `scripts/Dockerfile.jekyll:1-13`
+**Location:** `patch/website/Gemfile:1-8`; `.gitignore:9`; `scripts/Dockerfile.jekyll:1-13`
 
 **Problem:** Most gems are unconstrained, `Gemfile.lock` is ignored, and the Jekyll image uses a mutable tag.
 
@@ -514,9 +514,9 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Low] Public export metadata and debug leftovers are defective
 
-**Location:** `aider/coders/__init__.py:18-34`; `aider/analytics.py:208`; `aider/coders/base_coder.py:2280-2281`; `aider/coders/editblock_coder.py:183-187`; `aider/scrape.py:257`; `aider/models.py:967-976`; `aider/commands.py:1278-1314`
+**Location:** `patch/coders/__init__.py:18-34`; `patch/analytics.py:208`; `patch/coders/base_coder.py:2280-2281`; `patch/coders/editblock_coder.py:183-187`; `patch/scrape.py:257`; `patch/models.py:967-976`; `patch/commands.py:1278-1314`
 
-**Problem:** `aider.coders.__all__` contains class objects instead of strings, so `from aider.coders import *` raises `TypeError`. Additional confirmed leftovers include unconditional debug output on PostHog errors, a `dump(edits)` path for a filename literally named `python`, unreachable fuzzy matching after a bare return, only the first image being removed during HTML slimming, a Copilot error containing a token prefix and complete response body, and `/paste` path/temporary-directory cleanup defects.
+**Problem:** `patch.coders.__all__` contains class objects instead of strings, so `from patch.coders import *` raises `TypeError`. Additional confirmed leftovers include unconditional debug output on PostHog errors, a `dump(edits)` path for a filename literally named `python`, unreachable fuzzy matching after a bare return, only the first image being removed during HTML slimming, a Copilot error containing a token prefix and complete response body, and `/paste` path/temporary-directory cleanup defects.
 
 **Impact:** These produce broken wildcard import behavior, noisy or potentially sensitive diagnostics, dead maintenance surface, incomplete HTML cleanup, and leaked pasted-image temporary files. None rises to the severity of the findings above in the normal threat model.
 
@@ -528,9 +528,9 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Low] Fork identity and self-update behavior remain upstream-owned
 
-**Location:** `pyproject.toml:2-27`; `aider/versioncheck.py:15-35,78`; `aider/analytics.py`; `README.md:31-39`
+**Location:** `pyproject.toml:2-27`; `patch/versioncheck.py:15-35,78`; `patch/analytics.py`; `README.md:31-39`
 
-**Problem:** The fork still identifies as the upstream `aider-chat` package, links to the upstream homepage, checks/upgrades from upstream PyPI or GitHub, reports opted-in analytics to the upstream project, and displays upstream badges.
+**Problem:** Before the rename, the fork still identified as the upstream `aider-chat` package, linked to the upstream homepage, checked/upgraded from upstream PyPI or GitHub, reported opted-in analytics to the upstream project, and displayed upstream badges.
 
 **Impact:** A fork user accepting an upgrade replaces this checkout's distribution with upstream Aider. If the fork is published, it collides with upstream package and console-script identity. Analytics and project provenance may be surprising despite the README's fork notice.
 
@@ -542,7 +542,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Low] Current pre-commit lint job has a deterministic failure
 
-**Location:** `aider/onboarding.py:229-233`; `.pre-commit-config.yaml:11-15`; `.flake8`
+**Location:** `patch/onboarding.py:229-233`; `.pre-commit-config.yaml:11-15`; `.flake8`
 
 **Problem:** `do_GET()` declares `nonlocal server_error` but never assigns it. Flake8 reports F824, which is not ignored by project configuration.
 
@@ -558,7 +558,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Low] Analytics exception autocapture bypasses normal field redaction
 
-**Location:** `aider/analytics.py:106,135-160,196-204`
+**Location:** `patch/analytics.py:106,135-160,196-204`
 
 **Problem:** The opted-in PostHog client enables automatic exception capture. That channel can include exception messages and stack traces with local paths or provider response text, independently of the explicit model-name redaction used for normal events.
 
@@ -573,7 +573,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 The primary flow is:
 
 ```text
-aider.main (CLI/config)
+patch.main (CLI/config)
     -> Model/LiteLLM -> provider API
     -> Coder (context, authorization, edit orchestration, commit/lint/test)
         -> edit-format subclasses -> filesystem
@@ -647,12 +647,12 @@ The independent audit also regenerated locks in a temporary copy and observed dr
 
 ## Dead / Duplicate Code
 
-- **Low, High confidence:** `aider/coders/editblock_func_coder.py:9-85` is unreachable in normal operation: its constructor always raises and it is absent from the coder registry. Its prompt module appears removable.
-- **Low, High confidence:** `aider/coders/wholefile_func_coder.py:8-50` also always raises and is not registered. Its prompt module appears removable.
-- **Low, Medium confidence:** `aider/coders/single_wholefile_func_coder.py` is commented out of `aider/coders/__init__.py:16,28` and has no code callers. Check unofficial external imports before removal.
-- **Low, High confidence:** `replace_closest_edit_distance` in `aider/coders/editblock_coder.py:296` has only one call, located after an unconditional return at line 183.
-- **Low, High confidence:** `GUI.search`, `do_settings_tab`, `do_add_image`, `do_run_shell`, and `do_git` in `aider/gui.py` have definitions but no callers in the repository.
-- `aider/coders/search_replace.py` remains active through five imports in `udiff_coder.py`, but its standalone benchmarking harness and several helpers have no external references and can be split or removed after focused tests.
+- **Low, High confidence:** `patch/coders/editblock_func_coder.py:9-85` is unreachable in normal operation: its constructor always raises and it is absent from the coder registry. Its prompt module appears removable.
+- **Low, High confidence:** `patch/coders/wholefile_func_coder.py:8-50` also always raises and is not registered. Its prompt module appears removable.
+- **Low, Medium confidence:** `patch/coders/single_wholefile_func_coder.py` is commented out of `patch/coders/__init__.py:16,28` and has no code callers. Check unofficial external imports before removal.
+- **Low, High confidence:** `replace_closest_edit_distance` in `patch/coders/editblock_coder.py:296` has only one call, located after an unconditional return at line 183.
+- **Low, High confidence:** `GUI.search`, `do_settings_tab`, `do_add_image`, `do_run_shell`, and `do_git` in `patch/gui.py` have definitions but no callers in the repository.
+- `patch/coders/search_replace.py` remains active through five imports in `udiff_coder.py`, but its standalone benchmarking harness and several helpers have no external references and can be split or removed after focused tests.
 - The two tree-sitter query trees are intentional compatibility fallback data, not accidental duplication.
 
 ## Recommended Refactoring Plan
@@ -703,7 +703,7 @@ Ranked by impact and likelihood relative to effort:
 
 | Rank | Action | Impact | Likelihood | Effort |
 |---:|---|---|---|---|
-| 1 | Gate repository `.aider.conf.yml` and `.env` behind trust | High | High | Medium |
+| 1 | Gate repository `.patch.conf.yml` and `.env` behind trust | High | High | Medium |
 | 2 | Root-contain model-originated edits and authorize PatchCoder destinations | High | High | Low–Medium |
 | 3 | Move repomap cache out of repositories and remove pickle | High | Medium | Medium |
 | 4 | Reject truncated model edits and make writes atomic | High | Medium | Medium |

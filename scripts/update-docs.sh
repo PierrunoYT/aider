@@ -10,25 +10,25 @@ else
 fi
 
 if [ "$ARG" != "--check" ]; then
-  tail -1000 ~/.aider/analytics.jsonl > aider/website/assets/sample-analytics.jsonl
-  cog -r aider/website/docs/faq.md
+  tail -1000 ~/.patch/analytics.jsonl > patch/website/assets/sample-analytics.jsonl
+  cog -r patch/website/docs/faq.md
 fi
 
 # README.md before index.md, because index.md uses cog to include README.md
 cog $ARG \
     README.md \
-    aider/website/index.html \
-    aider/website/HISTORY.md \
-    aider/website/docs/usage/commands.md \
-    aider/website/docs/languages.md \
-    aider/website/docs/config/dotenv.md \
-    aider/website/docs/config/options.md \
-    aider/website/docs/config/aider_conf.md \
-    aider/website/docs/config/adv-model-settings.md \
-    aider/website/docs/config/model-aliases.md \
-    aider/website/docs/leaderboards/index.md \
-    aider/website/docs/leaderboards/edit.md \
-    aider/website/docs/leaderboards/refactor.md \
-    aider/website/docs/llms/other.md \
-    aider/website/docs/more/infinite-output.md \
-    aider/website/docs/legal/privacy.md
+    patch/website/index.html \
+    patch/website/HISTORY.md \
+    patch/website/docs/usage/commands.md \
+    patch/website/docs/languages.md \
+    patch/website/docs/config/dotenv.md \
+    patch/website/docs/config/options.md \
+    patch/website/docs/config/patch_conf.md \
+    patch/website/docs/config/adv-model-settings.md \
+    patch/website/docs/config/model-aliases.md \
+    patch/website/docs/leaderboards/index.md \
+    patch/website/docs/leaderboards/edit.md \
+    patch/website/docs/leaderboards/refactor.md \
+    patch/website/docs/llms/other.md \
+    patch/website/docs/more/infinite-output.md \
+    patch/website/docs/legal/privacy.md

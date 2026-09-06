@@ -11,13 +11,13 @@ from unittest import TestCase, mock
 import git
 import pyperclip
 
-from aider.coders import Coder
-from aider.commands import Commands, SwitchCoder
-from aider.dump import dump  # noqa: F401
-from aider.io import InputOutput
-from aider.models import Model
-from aider.repo import GitRepo
-from aider.utils import ChdirTemporaryDirectory, GitTemporaryDirectory, make_repo
+from patch.coders import Coder
+from patch.commands import Commands, SwitchCoder
+from patch.dump import dump  # noqa: F401
+from patch.io import InputOutput
+from patch.models import Model
+from patch.repo import GitRepo
+from patch.utils import ChdirTemporaryDirectory, GitTemporaryDirectory, make_repo
 
 
 class TestCommands(TestCase):
@@ -35,7 +35,7 @@ class TestCommands(TestCase):
     def test_cmd_add(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, fancy_input=False, yes=True)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -149,7 +149,7 @@ class TestCommands(TestCase):
         # https://github.com/Aider-AI/aider/issues/293
 
         io = InputOutput(pretty=False, fancy_input=False, yes=False)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -159,7 +159,7 @@ class TestCommands(TestCase):
     def test_cmd_add_with_glob_patterns(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, fancy_input=False, yes=True)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -185,7 +185,7 @@ class TestCommands(TestCase):
     def test_cmd_add_no_match(self):
         # yes=False means we will *not* create the file when it is not found
         io = InputOutput(pretty=False, fancy_input=False, yes=False)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -199,7 +199,7 @@ class TestCommands(TestCase):
     def test_cmd_add_no_match_but_make_it(self):
         # yes=True means we *will* create the file when it is not found
         io = InputOutput(pretty=False, fancy_input=False, yes=True)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -216,7 +216,7 @@ class TestCommands(TestCase):
     def test_cmd_add_drop_directory(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, fancy_input=False, yes=False)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -267,7 +267,7 @@ class TestCommands(TestCase):
     def test_cmd_drop_with_glob_patterns(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, fancy_input=False, yes=True)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -296,7 +296,7 @@ class TestCommands(TestCase):
     def test_cmd_drop_without_glob(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, fancy_input=False, yes=True)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -328,7 +328,7 @@ class TestCommands(TestCase):
     def test_cmd_add_bad_encoding(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, fancy_input=False, yes=True)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -423,7 +423,7 @@ class TestCommands(TestCase):
     def test_cmd_add_from_subdir_again(self):
         with GitTemporaryDirectory():
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -468,7 +468,7 @@ class TestCommands(TestCase):
             os.chdir(str(root))
 
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -491,7 +491,7 @@ class TestCommands(TestCase):
             make_repo()
 
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -509,7 +509,7 @@ class TestCommands(TestCase):
     def test_cmd_add_filename_with_special_chars(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -534,7 +534,7 @@ class TestCommands(TestCase):
             repo.git.commit("-m", "Initial commit")
 
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(Model("claude-sonnet-4-6"), None, io)
             print(coder.get_announcements())
@@ -574,7 +574,7 @@ class TestCommands(TestCase):
     def test_cmd_add_dirname_with_special_chars(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -592,7 +592,7 @@ class TestCommands(TestCase):
     def test_cmd_add_dirname_with_special_chars_git(self):
         with GitTemporaryDirectory():
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -614,7 +614,7 @@ class TestCommands(TestCase):
     def test_cmd_add_abs_filename(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -629,7 +629,7 @@ class TestCommands(TestCase):
     def test_cmd_add_quoted_filename(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -657,7 +657,7 @@ class TestCommands(TestCase):
             repo.git.rm("one.txt")
 
             io = InputOutput(pretty=False, fancy_input=False, yes=True)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -1037,7 +1037,7 @@ class TestCommands(TestCase):
     def test_cmd_add_unicode_error(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, fancy_input=False, yes=True)
-        from aider.coders import Coder
+        from patch.coders import Coder
 
         coder = Coder.create(self.GPT35, None, io)
         commands = Commands(io, coder)
@@ -1055,7 +1055,7 @@ class TestCommands(TestCase):
         with GitTemporaryDirectory():
             # Initialize the Commands and InputOutput objects
             io = InputOutput(pretty=False, fancy_input=False, yes=True)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -1110,7 +1110,7 @@ class TestCommands(TestCase):
     def test_cmd_test_unbound_local_error(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -1127,7 +1127,7 @@ class TestCommands(TestCase):
     def test_cmd_test_returns_output_on_failure(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -1152,7 +1152,7 @@ class TestCommands(TestCase):
             repo = git.Repo()
 
             io = InputOutput(pretty=False, fancy_input=False, yes=False)
-            from aider.coders import Coder
+            from patch.coders import Coder
 
             coder = Coder.create(self.GPT35, None, io)
             commands = Commands(io, coder)
@@ -1197,7 +1197,7 @@ class TestCommands(TestCase):
 
             # Store the commit hash
             last_commit_hash = repo.head.commit.hexsha[:7]
-            coder.aider_commit_hashes.add(last_commit_hash)
+            coder.patch_commit_hashes.add(last_commit_hash)
 
             file_path.write_text("dirty content")
 
@@ -1244,7 +1244,7 @@ class TestCommands(TestCase):
 
             # Store the commit hash
             last_commit_hash = repo.head.commit.hexsha[:7]
-            coder.aider_commit_hashes.add(last_commit_hash)
+            coder.patch_commit_hashes.add(last_commit_hash)
 
             # Attempt to undo the last commit, should refuse
             commands.cmd_undo("")
@@ -1273,7 +1273,7 @@ class TestCommands(TestCase):
 
             # Store the commit hash
             last_commit_hash = repo.head.commit.hexsha[:7]
-            coder.aider_commit_hashes.add(last_commit_hash)
+            coder.patch_commit_hashes.add(last_commit_hash)
 
             # Attempt to undo the last commit
             commands.cmd_undo("")
@@ -1338,7 +1338,7 @@ class TestCommands(TestCase):
             commands.cmd_think_tokens("")
             mock_tool_output.assert_any_call(mock.ANY)  # Just verify it calls tool_output
 
-    def test_cmd_add_aiderignored_file(self):
+    def test_cmd_add_patchignored_file(self):
         with GitTemporaryDirectory():
             repo = git.Repo()
 
@@ -1350,7 +1350,7 @@ class TestCommands(TestCase):
             repo.git.add(str(fname2))
             repo.git.commit("-m", "initial")
 
-            aignore = Path(".aiderignore")
+            aignore = Path(".patchignore")
             aignore.write_text(f"{fname1}\n{fname2}\ndir\n")
 
             io = InputOutput(yes=True)
@@ -1360,7 +1360,7 @@ class TestCommands(TestCase):
                 io,
                 fnames,
                 None,
-                aider_ignore_file=str(aignore),
+                patch_ignore_file=str(aignore),
             )
 
             coder = Coder.create(
@@ -1744,7 +1744,7 @@ class TestCommands(TestCase):
         commands = Commands(io, coder)
 
         # Mock sanity check to avoid network calls
-        with mock.patch("aider.models.sanity_check_models"):
+        with mock.patch("patch.models.sanity_check_models"):
             # Test switching the main model to gpt-4 (default 'whole')
             with self.assertRaises(SwitchCoder) as context:
                 commands.cmd_model("gpt-4")
@@ -1796,7 +1796,7 @@ class TestCommands(TestCase):
         commands = Commands(io, coder)
 
         # Mock sanity check to avoid network calls
-        with mock.patch("aider.models.sanity_check_models"):
+        with mock.patch("patch.models.sanity_check_models"):
             # Test switching the main model to gpt-4 (default 'whole')
             with self.assertRaises(SwitchCoder) as context:
                 commands.cmd_model("gpt-4")
@@ -1814,7 +1814,7 @@ class TestCommands(TestCase):
         question = "What is the meaning of life?"
         canned_reply = "The meaning of life is 42."
 
-        with mock.patch("aider.coders.Coder.run") as mock_run:
+        with mock.patch("patch.coders.Coder.run") as mock_run:
             mock_run.return_value = canned_reply
 
             with self.assertRaises(SwitchCoder):
