@@ -769,7 +769,7 @@ Both tests now use `gpt-4o` as the model and mock the `RepoMap` class to ensure 
 
 > Tokens: 26,200 sent, 680 received. Cost: $0.09 request, $0.12 session.  
 > The LLM did not conform to the edit format.  
-> https://aider.chat/docs/troubleshooting/edit-errors.html  
+> https://example.org/docs/troubleshooting/edit-errors.html  
 > # 1 SEARCH/REPLACE block failed to match!  
 >   
 > ## SearchReplaceNoExactMatch: This SEARCH block failed to exactly match lines in tests/basic/test_main.py  
@@ -875,7 +875,7 @@ These changes will implement the tests for the `--map-tokens` option as requeste
 
 > Tokens: 27,543 sent, 632 received. Cost: $0.09 request, $0.21 session.  
 > The LLM did not conform to the edit format.  
-> https://aider.chat/docs/troubleshooting/edit-errors.html  
+> https://example.org/docs/troubleshooting/edit-errors.html  
 > # 1 SEARCH/REPLACE block failed to match!  
 >   
 > ## SearchReplaceNoExactMatch: This SEARCH block failed to exactly match lines in tests/basic/test_main.py  
@@ -2716,7 +2716,7 @@ def simple_send_with_retries(model_name, messages):
 @@@ REPLACE @@@@@@@@@@@@@@@@@@@@
 
 
-@@@ #### refactor "https://aider.chat" and "Patch" into constants in llm.py @@@@@@@@@@@@@@@@@@@@
+@@@ #### refactor "https://example.org" and "Patch" into constants in llm.py @@@@@@@@@@@@@@@@@@@@
 @@@ SEARCH: patch/llm.py @@@@@@@@@@@@@@@@@@@@
 import importlib
 import os
@@ -2724,7 +2724,7 @@ import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
-os.environ["OR_SITE_URL"] = "http://aider.chat"
+os.environ["OR_SITE_URL"] = "http://example.org"
 os.environ["OR_APP_NAME"] = "Patch"
 
 # `import litellm` takes 1.5 seconds, defer it!
@@ -2735,7 +2735,7 @@ import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
-PATCH_SITE_URL = "https://aider.chat"
+PATCH_SITE_URL = "https://example.org"
 PATCH_APP_NAME = "Patch"
 
 os.environ["OR_SITE_URL"] = PATCH_SITE_URL
@@ -2791,7 +2791,7 @@ from patch.llm import litellm, PATCH_SITE_URL, PATCH_APP_NAME
         max_tokens=8192,
         extra_headers={
             "anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15",
-            "HTTP-Referer": "https://aider.chat",
+            "HTTP-Referer": "https://example.org",
             "X-Title": "Patch",
         },
 @@@@@@@@@@@@@@@@@@@@
@@ -10065,7 +10065,7 @@ Both of these options are disabled by default, but can be useful for easily iden
 - `/diff` now shows diffs of all changes resulting from your request, including lint and test fixes.
 - New `/clipboard` command to paste images or text from the clipboard, replaces `/add-clipboard-image`.
 - Now shows the markdown scraped when you add a url with `/web`.
-- When [scripting patch](https://aider.chat/docs/scripting.html) messages can now contain in-chat `/` commands.
+- When [scripting patch](https://example.org/docs/scripting.html) messages can now contain in-chat `/` commands.
 - Patch in docker image now suggests the correct command to update to latest version.
 - Improved retries on API errors (was easy to test during Sonnet outage).
 - Added `--mini` for `gpt-4o-mini`.
@@ -10080,7 +10080,7 @@ Both of these options are disabled by default, but can be useful for easily iden
 - `/diff` now shows diffs of all changes resulting from your request, including lint and test fixes.
 - New `/clipboard` command to paste images or text from the clipboard, replaces `/add-clipboard-image`.
 - Now shows the markdown scraped when you add a url with `/web`.
-- When [scripting patch](https://aider.chat/docs/scripting.html) messages can now contain in-chat `/` commands.
+- When [scripting patch](https://example.org/docs/scripting.html) messages can now contain in-chat `/` commands.
 - Patch in docker image now suggests the correct command to update to latest version.
 - Improved retries on API errors (was easy to test during Sonnet outage).
 - Added `--mini` for `gpt-4o-mini`.
@@ -11739,11 +11739,11 @@ Patch lets you pair program with LLMs,
 to edit code in your local git repository.
 Start a new project or work with an existing git repo.
 Patch works best with GPT-4o & Claude 3.5 Sonnet and can 
-[connect to almost any LLM](https://aider.chat/docs/llms.html).
+[connect to almost any LLM](https://example.org/docs/llms.html).
 
 <p align="center">
   <img
-    src="https://aider.chat/assets/screencast.svg"
+    src="https://example.org/assets/screencast.svg"
     alt="patch screencast"
   >
 </p>
@@ -11752,7 +11752,7 @@ Patch works best with GPT-4o & Claude 3.5 Sonnet and can
   <a href="https://discord.gg/Tv2uQnR88V">
     <img src="https://img.shields.io/badge/Join-Discord-blue.svg"/>
   </a>
-  <a href="https://aider.chat/docs/install.html">
+  <a href="https://example.org/docs/install.html">
     <img src="https://img.shields.io/badge/Read-Docs-green.svg"/>
   </a>
 </p>
@@ -11767,11 +11767,11 @@ Patch vous permet de programmer en binôme avec des LLMs,
 pour éditer du code dans votre dépôt git local.
 Commencez un nouveau projet ou travaillez avec un dépôt git existant.
 Patch fonctionne mieux avec GPT-4o & Claude 3.5 Sonnet et peut
-[se connecter à presque tous les LLMs](https://aider.chat/docs/llms.html).
+[se connecter à presque tous les LLMs](https://example.org/docs/llms.html).
 
 <p align="center">
   <img
-    src="https://aider.chat/assets/screencast.svg"
+    src="https://example.org/assets/screencast.svg"
     alt="screencast patch"
   >
 </p>
@@ -11780,7 +11780,7 @@ Patch fonctionne mieux avec GPT-4o & Claude 3.5 Sonnet et peut
   <a href="https://discord.gg/Tv2uQnR88V">
     <img src="https://img.shields.io/badge/Rejoindre-Discord-blue.svg"/>
   </a>
-  <a href="https://aider.chat/docs/install.html">
+  <a href="https://example.org/docs/install.html">
     <img src="https://img.shields.io/badge/Lire-Docs-green.svg"/>
   </a>
 </p>
@@ -11832,9 +11832,9 @@ README.md
 <source>
 <<<<<<< SEARCH
 See the
-[installation instructions](https://aider.chat/docs/install.html)
+[installation instructions](https://example.org/docs/install.html)
 and other
-[documentation](https://aider.chat/docs/usage.html)
+[documentation](https://example.org/docs/usage.html)
 for more details.
 
 ## Features
@@ -11847,22 +11847,22 @@ for more details.
   - Refactor code.
   - Update docs.
 - Patch will edit your files to complete your request.
-- Patch [automatically git commits](https://aider.chat/docs/git.html) changes with a sensible commit message.
-- Patch works with [most popular languages](https://aider.chat/docs/languages.html): python, javascript, typescript, php, html, css, and more...
-- Patch works best with GPT-4o & Claude 3.5 Sonnet and can [connect to almost any LLM](https://aider.chat/docs/llms.html).
+- Patch [automatically git commits](https://example.org/docs/git.html) changes with a sensible commit message.
+- Patch works with [most popular languages](https://example.org/docs/languages.html): python, javascript, typescript, php, html, css, and more...
+- Patch works best with GPT-4o & Claude 3.5 Sonnet and can [connect to almost any LLM](https://example.org/docs/llms.html).
 - Patch can edit multiple files at once for complex requests.
-- Patch uses a [map of your entire git repo](https://aider.chat/docs/repomap.html), which helps it work well in larger codebases.
+- Patch uses a [map of your entire git repo](https://example.org/docs/repomap.html), which helps it work well in larger codebases.
 - Edit files in your editor while chatting with patch,
 and it will always use the latest version.
 Pair program with AI.
-- [Add images to the chat](https://aider.chat/docs/usage/images-urls.html) (GPT-4o, Claude 3.5 Sonnet, etc).
-- [Add URLs to the chat](https://aider.chat/docs/usage/images-urls.html) and patch will read their content.
-- [Code with your voice](https://aider.chat/docs/usage/voice.html).
+- [Add images to the chat](https://example.org/docs/usage/images-urls.html) (GPT-4o, Claude 3.5 Sonnet, etc).
+- [Add URLs to the chat](https://example.org/docs/usage/images-urls.html) and patch will read their content.
+- [Code with your voice](https://example.org/docs/usage/voice.html).
 
 
 ## Top tier performance
 
-[Patch has one of the top scores on SWE Bench](https://aider.chat/2024
+[Patch has one of the top scores on SWE Bench](https://example.org/2024
 
 >  
 >  
@@ -11904,7 +11904,7 @@ HISTORY.md
 - `/diff` now shows diffs of all changes resulting from your request, including lint and test fixes.
 - New `/clipboard` command to paste images or text from the clipboard, replaces `/add-clipboard-image`.
 - Now shows the markdown scraped when you add a url with `/web`.
-- When [scripting patch](https://aider.chat/docs/scripting.html) messages can now contain in-chat `/` commands.
+- When [scripting patch](https://example.org/docs/scripting.html) messages can now contain in-chat `/` commands.
 - Patch in docker image now suggests the correct command to update to latest version.
 - Improved retries on API errors (was easy to test during Sonnet outage).
 - Added `--mini` for `gpt-4o-mini`.
@@ -11932,7 +11932,7 @@ HISTORY.md
 - New `/add-clipboard-image` to add images to the chat from your clipboard.
 - Use `--map-tokens 1024` to use repo map with any model.
 - Support for Sonnet's 8k output window.
-  - [Patch already supported infinite output from Sonnet.](https://aider.chat/2024/07/01/sonnet-not-lazy.html)
+  - [Patch already supported infinite output from Sonnet.](https://example.org/2024/07/01/sonnet-not-lazy.html)
 - Workaround litellm bug for retrying API server errors.
 - Upgraded dependencies, to pick up litellm bug fixes.
 - Patch wrote 44% of the code in this release.
@@ -11943,16 +11943,16 @@ HISTORY.md
 
 ### Patch v0.47.0
 
-- [Commit message](https://aider.chat/docs/git.html#commit-messages) improvements:
+- [Commit message](https://example.org/docs/git.html#commit-messages) improvements:
   - Added Conventional Commits guidelines to commit message prompt.
   - Added `--commit-prompt` to customize the commit message prompt.
   - Added strong model as a fallback for commit messages (and chat summaries).
-- [Linting](https://aider.chat/docs/usage/lint-test.html) improvements:
+- [Linting](https://example.org/docs/usage/lint-test.html) improvements:
   - Ask before fixing lint errors.
   - Improved performance of `--lint` on all dirty files in repo.
   - Improved lint flow, now doing code edit auto-commit before linting.
   - Bugfix to properly handle subprocess encodings (also for `/run`).
-- Improved [docker support](https://aider.chat/docs/install/docker.html):
+- Improved [docker support](https://example.org/docs/install/docker.html):
   - Resolved permission issues when using `docker run --user xxx`.
   - New `paulgauthier/patch-full` docker image, which includes all extras.
 - Switching to code and ask mode no longer summarizes the chat history.
@@ -12037,7 +12037,7 @@ HISTORY.md
 
 ### Patch v0.43.0
 
-- Use `/help <question>` to [ask for help about using patch](https://aider.chat/docs/troubleshooting/support.html), customizing settings, troubleshooting, using LLMs, etc.
+- Use `/help <question>` to [ask for help about using patch](https://example.org/docs/troubleshooting/support.html), customizing settings, troubleshooting, using LLMs, etc.
 - Allow multiple use of `/undo`.
 - All config/env/yml/json files now load from home, git root, cwd and named command line switch.
 - New `$HOME/.patch/caches` dir for app-wide expendable caches.
@@ -12054,11 +12054,11 @@ HISTORY.md
 
 ### Patch v0.41.0
 
-- [Allow Claude 3.5 Sonnet to stream back >4k tokens!](https://aider.chat/2024/07/01/sonnet-not-lazy.html)
+- [Allow Claude 3.5 Sonnet to stream back >4k tokens!](https://example.org/2024/07/01/sonnet-not-lazy.html)
   - It is the first model capable of writing such large coherent, useful code edits.
   - Do large refactors or generate multiple files of new code in one go.
 - Patch now uses `claude-3-5-sonnet-20240620` by default if `ANTHROPIC_API_KEY` is set in the environment.
-- [Enabled image support](https://aider.chat/docs/usage/images-urls.html) for 3.5 Sonnet and for GPT-4o & 3.5 Sonnet via OpenRouter (by @yamitzky).
+- [Enabled image support](https://example.org/docs/usage/images-urls.html) for 3.5 Sonnet and for GPT-4o & 3.5 Sonnet via OpenRouter (by @yamitzky).
 - Added `--attribute-commit-message` to prefix patch's commit messages with "patch:".
 - Fixed regression in quality of one-line commit messages.
 - Automatically retry on Anthropic `overloaded_error`.
@@ -12082,23 +12082,23 @@ HISTORY.md
 
 - Improved prompting to discourage Sonnet from wasting tokens emitting unchanging code (#705).
 - Improved error info for token limit errors.
-- Options to suppress adding "(patch)" to the [git author and committer names](https://aider.chat/docs/git.html#commit-attribution).
+- Options to suppress adding "(patch)" to the [git author and committer names](https://example.org/docs/git.html#commit-attribution).
 - Use `--model-settings-file` to customize per-model settings, like use of repo-map (by @caseymcc).
 - Improved invocation of flake8 linter for python code.
 
 
 ### Patch v0.39.0
 
-- Use `--sonnet` for Claude 3.5 Sonnet, which is the top model on [patch's LLM code editing leaderboard](https://aider.chat/docs/leaderboards/#claude-35-sonnet-takes-the-top-spot).
+- Use `--sonnet` for Claude 3.5 Sonnet, which is the top model on [patch's LLM code editing leaderboard](https://example.org/docs/leaderboards/#claude-35-sonnet-takes-the-top-spot).
 - All `PATCH_xxx` environment variables can now be set in `.env` (by @jpshack-at-palomar).
 - Use `--llm-history-file` to log raw messages sent to the LLM (by @daniel-vainsencher).
 - Commit messages are no longer prefixed with "patch:". Instead the git author and committer names have "(patch)" added.
 
 ### Patch v0.38.0
 
-- Use `--vim` for [vim keybindings](https://aider.chat/docs/usage/commands.html#vi) in the chat.
-- [Add LLM metadata](https://aider.chat/docs/llms/warnings.html#specifying-context-window-size-and-token-costs) via `.patch.models.json` file (by @caseymcc).
-- More detailed [error messages on token limit errors](https://aider.chat/docs/troubleshooting/token-limits.html).
+- Use `--vim` for [vim keybindings](https://example.org/docs/usage/commands.html#vi) in the chat.
+- [Add LLM metadata](https://example.org/docs/llms/warnings.html#specifying-context-window-size-and-token-costs) via `.patch.models.json` file (by @caseymcc).
+- More detailed [error messages on token limit errors](https://example.org/docs/troubleshooting/token-limits.html).
 - Single line commit messages, without the recent chat messages.
 - Ensure `--commit --dry-run` does nothing.
 - Have playwright wait for idle network to better scrape js sites.
@@ -12118,7 +12118,7 @@ HISTORY.md
 
 ### Patch v0.36.0
 
-- [Patch can now lint your code and fix any errors](https://aider.chat/2024/05/22/linting.html).
+- [Patch can now lint your code and fix any errors](https://example.org/2024/05/22/linting.html).
   - Patch automatically lints and fixes after every LLM edit.
   - You can manually lint-and-fix files with `/lint` in the chat or `--lint` on the command line.
   - Patch includes built in basic linters for all supported tree-sitter languages.
@@ -12132,8 +12132,8 @@ HISTORY.md
 ### Patch v0.35.0
 
 - Patch now uses GPT-4o by default.
-  - GPT-4o tops the [patch LLM code editing leaderboard](https://aider.chat/docs/leaderboards/) at 72.9%, versus 68.4% for Opus.
-  - GPT-4o takes second on [patch's refactoring leaderboard](https://aider.chat/docs/leaderboards/#code-refactoring-leaderboard) with 62.9%, versus Opus at 72.3%.
+  - GPT-4o tops the [patch LLM code editing leaderboard](https://example.org/docs/leaderboards/) at 72.9%, versus 68.4% for Opus.
+  - GPT-4o takes second on [patch's refactoring leaderboard](https://example.org/docs/leaderboards/#code-refactoring-leaderboard) with 62.9%, versus Opus at 72.3%.
 - Added `--restore-chat-history` to restore prior chat history on launch, so you can continue the last conversation.
 - Improved reflection feedback to LLMs using the diff edit format.
 - Improved retries on `httpx` errors.
@@ -12150,11 +12150,11 @@ HISTORY.md
 
 ### Patch v0.33.0
 
-- Added native support for [Deepseek models](https://aider.chat/docs/llms.html#deepseek) using `DEEPSEEK_API_KEY` and `deepseek/deepseek-chat`, etc rather than as a generic OpenAI compatible API.
+- Added native support for [Deepseek models](https://example.org/docs/llms.html#deepseek) using `DEEPSEEK_API_KEY` and `deepseek/deepseek-chat`, etc rather than as a generic OpenAI compatible API.
 
 ### Patch v0.32.0
 
-- [Patch LLM code editing leaderboards](https://aider.chat/docs/leaderboards/) that rank popular models according to their ability to edit code.
+- [Patch LLM code editing leaderboards](https://example.org/docs/leaderboards/) that rank popular models according to their ability to edit code.
   - Leaderboards include GPT-3.5/4 Turbo, Opus, Sonnet, Gemini 1.5 Pro, Llama 3, Deepseek Coder & Command-R+.
 - Gemini 1.5 Pro now defaults to a new diff-style edit format (diff-fenced), enabling it to work better with larger code bases.
 - Support for Deepseek-V2, via more a flexible config of system messages in the diff edit format.
@@ -12163,7 +12163,7 @@ HISTORY.md
 
 ### Patch v0.31.0
 
-- [Patch is now also AI pair programming in your browser!](https://aider.chat/2024/05/02/browser.html) Use the `--browser` switch to launch an experimental browser based version of patch.
+- [Patch is now also AI pair programming in your browser!](https://example.org/2024/05/02/browser.html) Use the `--browser` switch to launch an experimental browser based version of patch.
 - Switch models during the chat with `/model <name>` and search the list of available models with `/models <query>`.
 
 ### Patch v0.30.1
@@ -12172,14 +12172,14 @@ HISTORY.md
 
 ### Patch v0.30.0
 
-- Added [Gemini 1.5 Pro](https://aider.chat/docs/llms.html#free-models) as a recommended free model.
+- Added [Gemini 1.5 Pro](https://example.org/docs/llms.html#free-models) as a recommended free model.
 - Allow repo map for "whole" edit format.
 - Added `--models <MODEL-NAME>` to search the available models.
 - Added `--no-show-model-warnings` to silence model warnings.
 
 ### Patch v0.29.2
 
-- Improved [model warnings](https://aider.chat/docs/llms.html#model-warnings) for unknown or unfamiliar models
+- Improved [model warnings](https://example.org/docs/llms.html#model-warnings) for unknown or unfamiliar models
 
 ### Patch v0.29.1
 
@@ -12187,14 +12187,14 @@ HISTORY.md
 
 ### Patch v0.29.0
 
-- Added support for [directly connecting to Anthropic, Cohere, Gemini and many other LLM providers](https://aider.chat/docs/llms.html).
+- Added support for [directly connecting to Anthropic, Cohere, Gemini and many other LLM providers](https://example.org/docs/llms.html).
 - Added `--weak-model <model-name>` which allows you to specify which model to use for commit messages and chat history summarization.
 - New command line switches for working with popular models:
   - `--4-turbo-vision`
   - `--opus`
   - `--sonnet`
   - `--anthropic-api-key`
-- Improved "whole" and "diff" backends to better support [Cohere's free to use Command-R+ model](https://aider.chat/docs/llms.html#cohere).
+- Improved "whole" and "diff" backends to better support [Cohere's free to use Command-R+ model](https://example.org/docs/llms.html#cohere).
 - Allow `/add` of images from anywhere in the filesystem.
 - Fixed crash when operating in a repo in a detached HEAD state.
 - Fix: Use the same default model in CLI and python scripting.
@@ -12202,8 +12202,8 @@ HISTORY.md
 ### Patch v0.28.0
 
 - Added support for new `gpt-4-turbo-2024-04-09` and `gpt-4-turbo` models.
-  - Benchmarked at 61.7% on Exercism benchmark, comparable to `gpt-4-0613` and worse than the `gpt-4-preview-XXXX` models. See [recent Exercism benchmark results](https://aider.chat/2024/03/08/claude-3.html).
-  - Benchmarked at 34.1% on the refactoring/laziness benchmark, significantly worse than the `gpt-4-preview-XXXX` models. See [recent refactor bencmark results](https://aider.chat/2024/01/25/benchmarks-0125.html).
+  - Benchmarked at 61.7% on Exercism benchmark, comparable to `gpt-4-0613` and worse than the `gpt-4-preview-XXXX` models. See [recent Exercism benchmark results](https://example.org/2024/03/08/claude-3.html).
+  - Benchmarked at 34.1% on the refactoring/laziness benchmark, significantly worse than the `gpt-4-preview-XXXX` models. See [recent refactor bencmark results](https://example.org/2024/01/25/benchmarks-0125.html).
   - Patch continues to default to `gpt-4-1106-preview` as it performs best on both benchmarks, and significantly better on the refactoring/laziness benchmark.
 
 ### Patch v0.27.0
@@ -12227,12 +12227,12 @@ HISTORY.md
 ### Patch v0.25.0
 
 - Issue a warning if user adds too much code to the chat.
-  - https://aider.chat/docs/faq.html#how-can-i-add-all-the-files-to-the-chat
+  - https://example.org/docs/faq.html#how-can-i-add-all-the-files-to-the-chat
 - Vocally refuse to add files to the chat that match `.patchignore`
   - Prevents bug where subsequent git commit of those files will fail.
 - Added `--openai-organization-id` argument.
 - Show the user a FAQ link if edits fail to apply.
-- Made past articles part of https://aider.chat/blog/
+- Made past articles part of https://example.org/blog/
 
 ### Patch v0.24.1
 
@@ -12287,7 +12287,7 @@ HISTORY.md
 
 ### Patch v0.19.0
 
-- [Significantly reduced "lazy" coding from GPT-4 Turbo due to new unified diff edit format](https://aider.chat/docs/unified-diffs.html)
+- [Significantly reduced "lazy" coding from GPT-4 Turbo due to new unified diff edit format](https://example.org/docs/unified-diffs.html)
   - Score improves from 20% to 61% on new "laziness benchmark".
   - Patch now uses unified diffs by default for `gpt-4-1106-preview`.
 - New `--4-turbo` command line switch as a shortcut for `--model gpt-4-1106-preview`.
@@ -12558,7 +12558,7 @@ This implementation allows you to easily add analytics tracking throughout your 
 > Committing patch/analytics.py before applying edits.  
 > Commit b49ee06 feat: Add analytics.py module  
 > The LLM did not conform to the edit format.  
-> https://aider.chat/docs/troubleshooting/edit-errors.html  
+> https://example.org/docs/troubleshooting/edit-errors.html  
 > # 3 SEARCH/REPLACE blocks failed to match!  
 >   
 > ## SearchReplaceNoExactMatch: This SEARCH block failed to exactly match lines in patch/main.py  
@@ -13762,7 +13762,7 @@ HISTORY.md
 - `/diff` now shows diffs of all changes resulting from your request, including lint and test fixes.
 - New `/clipboard` command to paste images or text from the clipboard, replaces `/add-clipboard-image`.
 - Now shows the markdown scraped when you add a url with `/web`.
-- When [scripting patch](https://aider.chat/docs/scripting.html) messages can now contain in-chat `/` commands.
+- When [scripting patch](https://example.org/docs/scripting.html) messages can now contain in-chat `/` commands.
 - Patch in docker image now suggests the correct command to update to latest version.
 - Improved retries on API errors (was easy to test during Sonnet outage).
 - Added `--mini` for `gpt-4o-mini`.

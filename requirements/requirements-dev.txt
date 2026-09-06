@@ -8,32 +8,16 @@ build==1.4.0
     # via
     #   -c requirements/common-constraints.txt
     #   pip-tools
-certifi==2026.2.25
-    # via
-    #   -c requirements/common-constraints.txt
-    #   requests
-cffi==2.0.0 ; platform_python_implementation != 'PyPy'
-    # via
-    #   -c requirements/common-constraints.txt
-    #   cryptography
 cfgv==3.5.0
     # via
     #   -c requirements/common-constraints.txt
     #   pre-commit
-charset-normalizer==3.4.6
-    # via
-    #   -c requirements/common-constraints.txt
-    #   requests
 click==8.3.1
     # via
     #   -c requirements/common-constraints.txt
     #   pip-tools
     #   typer
 codespell==2.4.2
-    # via
-    #   -c requirements/common-constraints.txt
-    #   -r requirements/requirements-dev.in
-cogapp==3.6.0
     # via
     #   -c requirements/common-constraints.txt
     #   -r requirements/requirements-dev.in
@@ -57,10 +41,6 @@ coverage[toml]==7.13.4
     # via
     #   -c requirements/common-constraints.txt
     #   pytest-cov
-cryptography==46.0.5
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-auth
 cycler==0.12.1
     # via
     #   -c requirements/common-constraints.txt
@@ -82,55 +62,10 @@ fonttools==4.62.1
     # via
     #   -c requirements/common-constraints.txt
     #   matplotlib
-google-api-core[grpc]==2.30.0
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-cloud-bigquery
-    #   google-cloud-core
-google-auth==2.49.1
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-api-core
-    #   google-cloud-bigquery
-    #   google-cloud-core
-google-cloud-bigquery==3.40.1
-    # via
-    #   -c requirements/common-constraints.txt
-    #   -r requirements/requirements-dev.in
-google-cloud-core==2.5.0
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-cloud-bigquery
-google-crc32c==1.8.0
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-resumable-media
-google-resumable-media==2.8.0
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-cloud-bigquery
-googleapis-common-protos==1.73.0
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-api-core
-    #   grpcio-status
-grpcio==1.78.0
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-api-core
-    #   grpcio-status
-grpcio-status==1.78.0
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-api-core
 identify==2.6.18
     # via
     #   -c requirements/common-constraints.txt
     #   pre-commit
-idna==3.11
-    # via
-    #   -c requirements/common-constraints.txt
-    #   requests
 imgcat==0.6.0
     # via
     #   -c requirements/common-constraints.txt
@@ -183,7 +118,6 @@ packaging==26.0
     # via
     #   -c requirements/common-constraints.txt
     #   build
-    #   google-cloud-bigquery
     #   matplotlib
     #   pytest
     #   wheel
@@ -217,29 +151,6 @@ pre-commit==4.5.1
     # via
     #   -c requirements/common-constraints.txt
     #   -r requirements/requirements-dev.in
-proto-plus==1.27.1
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-api-core
-protobuf==6.33.5
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-api-core
-    #   googleapis-common-protos
-    #   grpcio-status
-    #   proto-plus
-pyasn1==0.6.2
-    # via
-    #   -c requirements/common-constraints.txt
-    #   pyasn1-modules
-pyasn1-modules==0.4.2
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-auth
-pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
-    # via
-    #   -c requirements/common-constraints.txt
-    #   cffi
 pygments==2.19.2
     # via
     #   -c requirements/common-constraints.txt
@@ -271,7 +182,6 @@ pytest-env==1.6.0
 python-dateutil==2.9.0.post0
     # via
     #   -c requirements/common-constraints.txt
-    #   google-cloud-bigquery
     #   matplotlib
     #   pandas
 python-discovery==1.1.3
@@ -290,19 +200,10 @@ pyyaml==6.0.3
     # via
     #   -c requirements/common-constraints.txt
     #   pre-commit
-requests==2.32.5
-    # via
-    #   -c requirements/common-constraints.txt
-    #   google-api-core
-    #   google-cloud-bigquery
 rich==14.3.3
     # via
     #   -c requirements/common-constraints.txt
     #   typer
-semver==3.0.4
-    # via
-    #   -c requirements/common-constraints.txt
-    #   -r requirements/requirements-dev.in
 setuptools==82.0.1
     # via
     #   -c requirements/common-constraints.txt
@@ -327,21 +228,15 @@ typer==0.24.1
     # via
     #   -c requirements/common-constraints.txt
     #   -r requirements/requirements-dev.in
-typing-extensions==4.15.0
+typing-extensions==4.15.0 ; python_full_version < '3.11'
     # via
     #   -c requirements/common-constraints.txt
-    #   cryptography
     #   exceptiongroup
-    #   grpcio
     #   virtualenv
 tzdata==2025.3
     # via
     #   -c requirements/common-constraints.txt
     #   pandas
-urllib3==2.6.3
-    # via
-    #   -c requirements/common-constraints.txt
-    #   requests
 uv==0.10.11
     # via
     #   -c requirements/common-constraints.txt

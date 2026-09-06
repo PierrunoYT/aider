@@ -17,7 +17,14 @@ the LLM's coding ability, but also its capacity to *edit existing code*
 and *format those code edits* so that Patch can save the
 edits to the local source files.
 
-See [this writeup for a longer discussion about the benchmark](https://aider.chat/2024/12/21/polyglot.html).
+See [the upstream polyglot benchmark](https://github.com/Aider-AI/polyglot-benchmark)
+for the exercises and background.
+
+The unchanged datasets in `benchmark/data/` are historical **Aider** results,
+moved out of the removed website. `problem_stats.py` uses the polyglot dataset;
+`over_time.py` uses the edit dataset and writes plots to `tmp.benchmarks/`.
+Run these tools from the repository root after creating `tmp.benchmarks/`.
+The underlying run directories are not bundled. Do not relabel these as Patch runs.
 
 The benchmark is intended to be run *inside a docker container*.
 This is because the benchmarking harness will be
@@ -82,7 +89,7 @@ You can run `./benchmark/benchmark.py --help` for a list of all the arguments, b
 - `--threads` specifies how many exercises to benchmark in parallel. Start with a single thread if you are working out the kinks on your benchmarking setup or working with a new model, etc. Once you are getting reliable results, you can speed up the process by running with more threads. 10 works well against the OpenAI APIs.
 - `--num-tests` specifies how many of the tests to run before stopping. This is another way to start gently as you debug your benchmarking setup.
 - `--keywords` filters the tests to run to only the ones whose name match the supplied argument (similar to `pytest -k xxxx`).
-- `--read-model-settings=<filename.yml>` specify model settings, see here: https://aider.chat/docs/config/adv-model-settings.html#model-settings
+- `--read-model-settings=<filename.yml>` specifies model settings; see [model settings](../patch/docs/models.md#model-settings).
 
 ### Benchmark report
 
@@ -140,7 +147,7 @@ You can see examples of the benchmark report yaml in the
 
 ## Limitations, notes
 
-- Contributions of benchmark results are welcome! Submit results by opening a PR with edits to the
-[aider leaderboard data files](https://github.com/Aider-AI/aider/blob/main/aider/website/_data/).
+- Contributions of Patch benchmark results are welcome! Submit a PR with the run
+configuration and summary, keeping new results separate from the inherited data.
 - These scripts are not intended for use by typical Patch end users.
 - Some of these tools are written as `bash` scripts, so it will be hard to use them on Windows.

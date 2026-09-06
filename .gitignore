@@ -6,10 +6,6 @@ patch.code-workspace
 patch_code.egg-info/
 build
 dist/
-Gemfile.lock
-_site
-.jekyll-cache/
-.jekyll-metadata
 patch/__version__.py
 patch/_version.py
 .venv/

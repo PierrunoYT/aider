@@ -8,9 +8,8 @@ from pathlib import Path
 
 import importlib_resources
 
-from patch import __version__, utils
+from patch import __version__, urls, utils
 from patch.dump import dump  # noqa: F401
-from patch.help_pats import exclude_website_pats
 
 warnings.simplefilter("ignore", category=FutureWarning)
 
@@ -31,54 +30,16 @@ def install_help_extra(io):
 
 
 def get_package_files():
-    for path in importlib_resources.files("patch.website").iterdir():
-        if path.is_file():
+    for path in importlib_resources.files("patch.docs").iterdir():
+        if path.is_file() and path.name.endswith(".md"):
             yield path
-        elif path.is_dir():
-            for subpath in path.rglob("*.md"):
-                yield subpath
 
 
 def fname_to_url(filepath):
-    website = "website"
-    index = "index.md"
-    md = ".md"
-
-    # Convert backslashes to forward slashes for consistency
-    filepath = filepath.replace("\\", "/")
-
-    # Convert to Path object for easier manipulation
-    path = Path(filepath)
-
-    # Split the path into parts
-    parts = path.parts
-
-    # Find the 'website' part in the path
-    try:
-        website_index = [p.lower() for p in parts].index(website.lower())
-    except ValueError:
-        return ""  # 'website' not found in the path
-
-    # Extract the part of the path starting from 'website'
-    relevant_parts = parts[website_index + 1 :]
-
-    # Handle _includes directory
-    if relevant_parts and relevant_parts[0].lower() == "_includes":
+    name = Path(str(filepath).replace("\\", "/")).name
+    if name not in {path.name for path in get_package_files()}:
         return ""
-
-    # Join the remaining parts
-    url_path = "/".join(relevant_parts)
-
-    # Handle index.md and other .md files
-    if url_path.lower().endswith(index.lower()):
-        url_path = url_path[: -len(index)]
-    elif url_path.lower().endswith(md.lower()):
-        url_path = url_path[: -len(md)] + ".html"
-
-    # Ensure the URL starts and ends with '/'
-    url_path = url_path.strip("/")
-
-    return f"https://aider.chat/{url_path}"
+    return urls.docs + name
 
 
 def get_index():
@@ -90,7 +51,7 @@ def get_index():
     )
     from llama_index.core.node_parser import MarkdownNodeParser
 
-    dname = Path.home() / ".patch" / "caches" / ("help." + __version__)
+    dname = Path.home() / ".patch" / "caches" / ("help.docs." + __version__)
 
     index = None
     try:
@@ -107,17 +68,11 @@ def get_index():
 
         nodes = []
         for fname in get_package_files():
-            fname = Path(fname)
-            if any(fname.match(pat) for pat in exclude_website_pats):
-                continue
-
             doc = Document(
-                text=importlib_resources.files("patch.website")
-                .joinpath(fname)
-                .read_text(encoding="utf-8"),
+                text=fname.read_text(encoding="utf-8"),
                 metadata=dict(
                     filename=fname.name,
-                    extension=fname.suffix,
+                    extension=".md",
                     url=fname_to_url(str(fname)),
                 ),
             )

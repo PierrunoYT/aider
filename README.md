@@ -56,7 +56,7 @@ The `patch` command is also available when your virtual environment is active.
 Use `python -m patch` to avoid ambiguity with the standard Unix `patch` utility.
 
 Run `python -m patch --help` for all options. See the
-[model configuration guide](patch/website/docs/llms.md) for other providers.
+[model configuration guide](patch/docs/models.md) for other providers.
 
 ### Install from source
 
@@ -92,12 +92,18 @@ variables from `AIDER_*` to `PATCH_*` before using them with Patch.
 
 ## Documentation
 
-- [Usage guide](patch/website/docs/usage.md)
-- [Model configuration](patch/website/docs/llms.md)
-- [Configuration options](patch/website/docs/config.md)
-- [Troubleshooting](patch/website/docs/troubleshooting.md)
+- [Installation and optional extras](patch/docs/install.md)
+- [Usage guide](patch/docs/usage.md)
+- [Model configuration](patch/docs/models.md)
+- [Configuration options](patch/docs/config.md)
+- [Git integration](patch/docs/git.md)
+- [Troubleshooting](patch/docs/troubleshooting.md)
+- [Analytics](patch/docs/analytics.md)
 - [Patch changelog](CHANGELOG.md)
 - [Contributing](CONTRIBUTING.md)
+
+These Markdown docs are packaged with Patch for `/help <question>`.
+Patch does not maintain a separate documentation website.
 
 ## Logos
 
@@ -105,8 +111,7 @@ variables from `AIDER_*` to `PATCH_*` before using them with Patch.
 - [Square P icon](assets/logo-icon.svg) — 2048 × 2048.
 
 Both SVGs use mint on charcoal and scale without requiring fonts.
-The root `assets/` folder contains the logos; keep the website copies in
-`patch/website/assets/` in sync when updating them.
+The root `assets/` folder contains the logos.
 
 ## License and attribution
 
@@ -114,6 +119,7 @@ Patch is a fork of [Aider](https://github.com/Aider-AI/aider), developed in
 [PierrunoYT/patch](https://github.com/PierrunoYT/patch). This repository is licensed
 under [Apache 2.0](LICENSE.txt).
 
-The [inherited release history](HISTORY.md), historical benchmarks, articles, and
-recordings are preserved as upstream material, not claims about Patch. Links to
-`aider.chat` in the documentation refer to upstream resources; they are not a Patch website.
+The [inherited release history](HISTORY.md) and retained [benchmark data](benchmark/data/)
+are upstream material, not claims about Patch. Historical documentation links point
+to upstream Aider's GitHub sources. The inherited website, articles, and recordings
+are no longer bundled with Patch.

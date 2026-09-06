@@ -1,24 +1,5 @@
-# This needs to sync with patch/help_pats.py
-
 global-exclude .DS_Store
 
 recursive-include patch/resources *.json *.yml
 recursive-include patch/queries *.scm
-recursive-include patch/website *.md
-
-recursive-exclude patch/website/examples *
-recursive-exclude patch/website/_posts *
-
-exclude patch/website/HISTORY.md
-exclude patch/website/docs/benchmarks*.md
-exclude patch/website/docs/ctags.md
-exclude patch/website/docs/unified-diffs.md
-
-exclude patch/website/install.ps1
-exclude patch/website/install.sh
-
-recursive-exclude patch/website/docs/leaderboards *
-recursive-exclude patch/website/assets *
-recursive-exclude patch/website *.js
-recursive-exclude patch/website *.html
-recursive-exclude patch/website *.yml
+recursive-include patch/docs *.md

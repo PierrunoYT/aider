@@ -525,7 +525,7 @@ def gui_main():
     st.set_page_config(
         layout="wide",
         page_title="Patch",
-        page_icon=urls.favicon,
+        page_icon="🛠️",
         menu_items={
             "Get Help": urls.website,
             "Report a bug": "https://github.com/PierrunoYT/patch/issues",

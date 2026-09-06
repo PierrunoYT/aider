@@ -18,7 +18,13 @@ Additional material risks include known-vulnerable dependencies, filesystem muta
 
 Audit scope included 691 tracked files, approximately 38,281 Python lines, packaging, Docker, workflows, scripts, documentation, and the complete test tree. A temporary wheel build and `pip-audit` were performed outside the repository. The initial orb lacked pytest, but the independent re-audit created an isolated environment and ran the basic suite: 471 passed, 5 voice-device failures, 1 skipped, and 67 subtests passed in 101 seconds after ambient environment variables and Git configuration were scrubbed.
 
-After fetching the previously shallow Git history, the fork boundary was verified exactly: `fe4f8b58a` adds four README lines on top of upstream Aider commit `5dc9490bb`; there are no fork-specific code changes. The code findings are therefore inherited from upstream Aider. The fork still ships them, but fixes should be coordinated upstream where possible. Its package identity, update URLs, analytics endpoint, and badges also remain upstream-facing.
+At the original audit snapshot, the fork boundary was verified as `fe4f8b58a` on
+top of upstream Aider commit `5dc9490bb`. That snapshot had no fork-specific code
+changes. Subsequent Patch commits changed package identity, updates, analytics,
+dependency resolution, and documentation. The counts, line numbers, and scanner
+results below describe the original snapshot unless a status says otherwise;
+they are not a fresh audit of the current tree. Unresolved code findings still
+need verification and remediation.
 
 ## Critical / High Priority Findings
 
@@ -294,7 +300,7 @@ else:
 
 ---
 
-### [Medium] Core network requests have no timeout
+### Partially resolved: [Medium] Core network requests have no timeout
 
 **Location:** `patch/models.py:934-983`; `patch/versioncheck.py:64-95`
 
@@ -307,6 +313,9 @@ else:
 ```python
 requests.get(url, headers=headers, timeout=(5, 30))
 ```
+
+**Status:** The PyPI update check now uses `timeout=3` and has regression tests.
+The Copilot request still needs timeout hardening.
 
 **Confidence:** High
 
@@ -330,7 +339,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ### [Medium] CI is non-hermetic and does not test the release artifact
 
-**Location:** `pytest.ini:4-8`; `.github/workflows/ubuntu-tests.yml:48-56`; `.github/workflows/windows-tests.yml:43-51`; `tests/scrape/test_scrape.py:11-95`; `tests/help/test_help.py:50-96`; `tests/basic/test_urls.py:6-15`
+**Location:** `pytest.ini`; `.github/workflows/ubuntu-tests.yml`; `.github/workflows/windows-tests.yml`; `tests/scrape/test_scrape.py`; `tests/basic/test_ssl_verification.py`
 
 **Problem:** Default tests access live websites, retry external requests, load optional functionality, and install tools into the active environment. In `test_ssl_verification.py`, a `MagicMock.name.startswith("bedrock/")` result is truthy, causing a real boto3 installation under `--yes`. Browser, scraper, and help tests similarly exercise runtime installers. CI installs from source and runs inside the checkout rather than testing a built wheel.
 
@@ -338,19 +347,27 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 **Recommendation:** Patch `run_install` or `check_for_dependencies` in affected tests, give mocks concrete model names, and add an autouse fixture that fails on attempted installation. Separate `unit`, `integration`, `network`, and `installer` tests, mock HTTP in unit tests, use a single intended package index for CPU wheels, and test the wheel outside the checkout.
 
+**Status:** Help tests now mock embedding and model boundaries, and documentation
+URL tests validate retained files and anchors locally. They no longer install
+extras or request remote documentation. Other network/installer tests and the
+missing CI artifact gate remain unresolved.
+
 **Confidence:** High
 
 ---
 
 ### [Medium] Release workflows can publish manually selected refs without artifact gates
 
-**Location:** `.github/workflows/release.yml:3-34`; `.github/workflows/docker-release.yml:3-52`
+**Location:** `.github/workflows/release.yml`
 
 **Problem:** Both workflows permit `workflow_dispatch` without checking for a protected release tag or environment. PyPI uses a long-lived token, and actions/tooling use mutable tags or dynamically installed versions.
 
 **Impact:** A mistaken invocation or compromised maintainer can publish from an unintended ref or overwrite Docker `latest`.
 
 **Recommendation:** Require a release-tag predicate, use a protected environment, adopt PyPI trusted publishing/OIDC, SHA-pin third-party actions, and publish only tested artifacts.
+
+**Status:** The Docker release workflow was removed. The PyPI workflow still
+supports manual dispatch and needs the recommended release gates.
 
 **Confidence:** Medium
 
@@ -502,15 +519,10 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ---
 
-### [Low] Documentation-site dependencies are not reproducibly locked
+### Resolved by removal: [Low] Documentation-site dependencies were not locked
 
-**Location:** `patch/website/Gemfile:1-8`; `.gitignore:9`; `scripts/Dockerfile.jekyll:1-13`
-
-**Problem:** Most gems are unconstrained, `Gemfile.lock` is ignored, and the Jekyll image uses a mutable tag.
-
-**Impact:** Documentation builds can change or fail without repository changes.
-
-**Recommendation:** Commit `Gemfile.lock` and pin the image by version or digest.
+**Status:** The inherited website and Jekyll tooling have been removed. Patch
+ships a small Markdown set in `patch/docs/`; no Ruby or website build remains.
 
 **Confidence:** High
 
@@ -530,7 +542,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ---
 
-### [Low] Fork identity and self-update behavior remain upstream-owned
+### Resolved: [Low] Fork identity and self-update behavior were upstream-owned
 
 **Location:** `pyproject.toml:2-27`; `patch/versioncheck.py:15-35,78`; `patch/analytics.py`; `README.md:31-39`
 
@@ -653,7 +665,13 @@ Other profiling targets are large retained command output, unbounded scraped pag
 
 Dependency management is centralized through input files and generated constraints. Main issues are vulnerable resolved versions, no automated vulnerability gate, no hashes, unconstrained Docker-only dependencies, dynamic release tooling, and a large production dependency set. No package was proven unused; Flake8, Pandoc support, NetworkX, and tree-sitter integrations all serve runtime features.
 
-The independent audit also regenerated locks in a temporary copy and observed drift in `common-constraints.txt`, `requirements-browser.txt`, and `requirements-help.txt`, including a missing Watchdog pin and host-specific accelerator dependencies. This indicates the compilation process is host-dependent. Compile each target environment deterministically, preserve Python markers, and verify generated files are clean in CI.
+The original audit observed host-dependent lock drift, including a missing
+Watchdog pin and accelerator dependencies. Universal resolution from Python 3.10
+has since replaced host-only compilation; regression tests check pin consistency
+on Linux and Windows across Python 3.10–3.14. The website-only development
+dependencies were removed with the site and the locks regenerated. These changes
+do not establish that the earlier vulnerability advisories have all been resolved;
+a fresh security scan is still required.
 
 ## Dead / Duplicate Code
 
@@ -701,9 +719,9 @@ The independent audit also regenerated locks in a temporary copy and observed dr
 ### Phase 4 — Cleanup
 
 - Remove confirmed deprecated coders and prompts after compatibility review.
-- Correct `CONTRIBUTING.md`.
-- Decide and document whether this remains an upstream-identical mirror or receives distinct package/update/analytics identity.
-- Lock Jekyll dependencies.
+- Completed: correct contributor paths, Python matrix, and optional-extra guidance.
+- Completed: establish distinct Patch package/update identity and remove default analytics collection.
+- Completed: remove the inherited site and Jekyll dependencies; package Markdown help instead.
 - Add targeted typing at external-data and edit-application boundaries.
 - Tighten Docker permissions.
 

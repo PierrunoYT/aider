@@ -14,8 +14,8 @@ Use the provided patch documentation *if it is relevant to the user's question*.
 Include a bulleted list of urls to the patch docs that might be relevant for the user to read.
 Include *bare* urls. *Do not* make [markdown links](http://...).
 For example:
-- https://aider.chat/docs/usage.html
-- https://aider.chat/docs/faq.html
+- https://github.com/PierrunoYT/patch/blob/main/patch/docs/usage.md
+- https://github.com/PierrunoYT/patch/blob/main/patch/docs/troubleshooting.md
 
 If you don't know the answer, say so and suggest some relevant patch doc urls.
 

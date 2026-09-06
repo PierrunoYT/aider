@@ -11,13 +11,13 @@ for development setup and contribution guidelines.
 - Use `.patch*` for application configuration/state and `PATCH_*` for application
   environment variables.
 - Preserve genuine upstream Aider attribution, historical benchmark results,
-  license notices, and useful upstream documentation links. Do not relabel
+  license notices, and useful upstream GitHub documentation links. Do not relabel
   upstream achievements or invent Patch domains.
 
 ## Code and dependencies
 
-- Runtime code lives in `patch/`, tests in `tests/`, website documentation in
-  `patch/website/`, and developer tooling in `scripts/`.
+- Runtime code lives in `patch/`, tests in `tests/`, packaged Markdown documentation
+  in `patch/docs/`, and developer tooling in `scripts/`. There is no website build.
 - Support Python 3.10 through 3.14, as declared in `pyproject.toml`.
 - Follow existing patterns, keep changes focused, and do not add type hints.
 - Use the configured isort, Black (100 columns, preview mode), flake8, and
@@ -31,8 +31,8 @@ for development setup and contribution guidelines.
 - After every change, review all documentation for impact and update every
   affected document in the same change. Documentation is part of completion,
   not a follow-up task. Do not make cosmetic edits to unaffected documents.
-- Check the README, contributor guide, this file, website pages under
-  `patch/website/`, and relevant component READMEs in `benchmark/`, `docker/`,
+- Check the README, contributor guide, this file, packaged docs under
+  `patch/docs/`, and relevant component READMEs in `benchmark/`, `docker/`,
   and other affected directories. Keep duplicated instructions consistent.
 - Update examples, CLI help, configuration/environment-variable references,
   installation and upgrade instructions, and generated documentation whenever
@@ -40,10 +40,9 @@ for development setup and contribution guidelines.
 - Record changes under `Unreleased` in [CHANGELOG.md](CHANGELOG.md). Use the
   appropriate category and explain user-visible behavior or contributor impact.
   Do not add Patch entries to inherited `HISTORY.md` files or rewrite upstream history.
-- Inspect documentation generators before running them. In particular,
-  `scripts/update-docs.sh` without `--check` copies local analytics into tracked
-  files and regenerates inherited history. Prefer targeted generation/checks;
-  never commit personal analytics, credentials, or private conversation data.
+- Keep packaged Markdown and `python -m patch --help` consistent. Never regenerate
+  inherited history or commit personal analytics, credentials, or private
+  conversation data.
 - If no documentation beyond the changelog needs updating, state that in the
   completion summary and explain why.
 
