@@ -540,7 +540,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 **Recommendation:** Either explicitly remain an unmodified downstream mirror and document upstream update/telemetry behavior, or choose distinct package/update/analytics identity before distributing fork-specific builds.
 
-**Status:** Partially resolved. Package identity, the homepage, and the version-check/upgrade path are now Patch-owned. Telemetry is not: `patch/analytics.py:56` still ships upstream Aider's PostHog project key, so opted-in analytics are reported to the upstream project. This is now disclosed in `patch/website/docs/more/analytics.md`, but the default destination still needs a Patch-owned project or removal before distributing builds.
+**Status:** Resolved. Package identity, the homepage, and the version-check/upgrade path are Patch-owned, and the upstream analytics keys have been removed. Patch now ships no analytics destination: the PostHog client is only constructed when the user supplies `--analytics-posthog-project-api-key`, and the opt-in prompt is never shown otherwise.
 
 **Confidence:** High
 
@@ -564,7 +564,7 @@ requests.get(url, headers=headers, timeout=(5, 30))
 
 ---
 
-### [Low] Analytics exception autocapture bypasses normal field redaction
+### Resolved: [Low] Analytics exception autocapture bypasses normal field redaction
 
 **Location:** `patch/analytics.py:106,135-160,196-204`
 
@@ -573,6 +573,8 @@ requests.get(url, headers=headers, timeout=(5, 30))
 **Impact:** Opted-in users can transmit more diagnostic context to the upstream analytics project than the normal event schema suggests. No API-key exfiltration through this path was reproduced, so this is a privacy-hardening issue rather than a confirmed credential leak.
 
 **Recommendation:** Disable automatic exception capture or sanitize exception type/message/frames through a dedicated allowlist before transmission. Document retained fields and consent behavior.
+
+**Status:** Resolved. `enable_exception_autocapture` is now `False`, so only the explicitly redacted events in `event()` are transmitted, and the client is only constructed at all when the user configures their own PostHog project.
 
 **Confidence:** Medium
 

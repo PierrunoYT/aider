@@ -570,7 +570,10 @@ def get_parser(default_config_files, git_root):
         "--analytics",
         action=argparse.BooleanOptionalAction,
         default=None,
-        help="Enable/disable analytics for current session (default: random)",
+        help=(
+            "Enable/disable analytics for current session (off unless"
+            " --analytics-posthog-project-api-key is set)"
+        ),
     )
     group.add_argument(
         "--analytics-log",
@@ -591,7 +594,7 @@ def get_parser(default_config_files, git_root):
     group.add_argument(
         "--analytics-posthog-project-api-key",
         metavar="ANALYTICS_POSTHOG_PROJECT_API_KEY",
-        help="Send analytics to custom PostHog project",
+        help="Send analytics to a PostHog project you control; required for any collection",
     )
 
     #########

@@ -1,27 +1,51 @@
 ---
 parent: More info
 nav_order: 500
-description: Opt-in, anonymous, no personal info.
+description: Off by default; Patch collects nothing unless you configure a destination.
 ---
 
 # Analytics
 
-Patch can collect anonymous analytics to help
-improve patch's ability to work with LLMs, edit code and complete user requests.
+**Patch collects no analytics.** It ships no analytics destination of its own,
+so there is nothing to opt out of: no events leave your machine, and you are
+never prompted about analytics.
 
-> **Fork note:** Patch still ships upstream Aider's PostHog project key, so any
-> analytics this fork collects are reported to the upstream Aider project rather
-> than to Patch. Until a Patch-owned project is configured, opt out permanently
-> with `patch --analytics-disable`, or send events somewhere you control with
-> `--analytics-posthog-project-api-key` and `--analytics-posthog-host`.
+Patch is a fork of Aider. Upstream Aider collects opt-in analytics through a
+PostHog project it operates, and Patch inherited that code. The upstream project
+key has been removed, and the collection path is now inert unless you
+deliberately point it at a PostHog project you control.
 
-## Opt-in, anonymous, no personal info
+## Collecting analytics for yourself
 
-Analytics are only collected if you agree and opt-in. 
-Patch respects your privacy and never collects your code, chat messages, keys or
-personal info.
+The instrumentation is still in the source, so you can use it to observe your
+own usage. Both of these are needed before anything is sent:
 
-Patch collects information on:
+- `--analytics-posthog-project-api-key KEY` — the PostHog project to send to.
+  Without it, analytics stay off no matter what else you pass.
+- `--analytics` — enable collection for the session. The first time, Patch asks
+  you to confirm.
+
+`--analytics-posthog-host HOST` selects a self-hosted PostHog installation
+instead of the default cloud host.
+
+`--no-analytics` turns collection off for a session, and `patch
+--analytics-disable` records a permanent opt-out that overrides everything
+above.
+
+## Logging events locally
+
+You can write events to a local file without sending them anywhere. This works
+whether or not a PostHog project is configured:
+
+```
+patch --analytics-log filename.jsonl --no-analytics
+```
+
+The log file is written on your machine and is never uploaded.
+
+## What the instrumentation records
+
+When you enable it against your own project, it records:
 
 - which LLMs are used and with how many tokens,
 - which of patch's edit formats are used,
@@ -29,105 +53,30 @@ Patch collects information on:
 - information about exceptions and errors,
 - etc
 
-These analytics are associated with an anonymous,
-randomly generated UUID4 user identifier.
-
-This information helps improve patch by identifying which models, edit formats,
-features and commands are most used.
-It also helps uncover bugs that users are experiencing, so that they can be fixed
-in upcoming releases.
-
-## Disabling analytics
-
-You can opt out of analytics forever by running this command one time:
-
-```
-patch --analytics-disable
-```
-
-## Enabling analytics
-
-The `--[no-]analytics` switch controls whether analytics are enabled for the
-current session:
-
-- `--analytics` will turn on analytics for the current session.
-This will *not* have any effect if you have permanently disabled analytics 
-with `--analytics-disable`.
-If this is the first time you have enabled analytics, patch
-will confirm you wish to opt-in to analytics.
-- `--no-analytics` will turn off analytics for the current session.
-- By default, if you don't provide `--analytics` or `--no-analytics`,
-patch will enable analytics for a random subset of users.
-Such randomly selected users will be asked if they wish to opt-in to analytics.
-This will never happen if you have permanently disabled analytics 
-with `--analytics-disable`.
-
-## Opting in
-
-The first time analytics are enabled, you will need to agree to opt-in.
-
-```
-patch --analytics
-
-Patch respects your privacy and never collects your code, prompts, chats, keys or any personal
-info.
-For more info: https://aider.chat/docs/more/analytics.html
-Allow collection of anonymous analytics to help improve patch? (Y)es/(N)o [Yes]:
-```
-
-If you say "no", analytics will be permanently disabled.
-
-
-## Details about data being collected
-
-### Sample analytics data
-
-To get a better sense of what type of data is collected, you can review some
-[sample analytics logs](https://github.com/PierrunoYT/patch/blob/main/patch/website/assets/sample-analytics.jsonl).
-These are 1,000 analytics events retained from upstream Aider, kept as an
-example of the event shape.
-
+Events carry an anonymous, randomly generated UUID4 identifier. Your code, chat
+messages, and API keys are never included, and model names that are not in the
+public model database are redacted.
 
 ### Analytics code
 
-Since patch is open source, all the places where patch collects analytics
-are visible in the source code.
-They can be viewed using 
+Since patch is open source, every place it can record an event is visible in the
+source. They can be viewed using
 [GitHub search](https://github.com/search?q=repo%3APierrunoYT%2Fpatch+%22.event%28%22&type=code).
 
+### Sample analytics data
 
-### Logging and inspecting analytics
-
-You can get a full log of the analytics that patch is collecting,
-in case you would like to audit or inspect this data.
-
-```
-patch --analytics-log filename.jsonl
-```
-
-If you want to just log analytics without reporting them, you can do:
-
-```
-patch --analytics-log filename.jsonl --no-analytics
-```
-
-### Sending analytics to custom PostHog project or installation
-
-Patch uses PostHog for analytics collection. You can configure patch to send analytics to your own PostHog project or a custom PostHog installation using these parameters:
-
-- `--analytics-posthog-project-api-key KEY` - Set a custom PostHog project API key
-- `--analytics-posthog-host HOST` - Set a custom PostHog host (default is app.posthog.com)
+To get a better sense of the shape of the data, you can review some
+[sample analytics logs](https://github.com/PierrunoYT/patch/blob/main/patch/website/assets/sample-analytics.jsonl).
+These are 1,000 events retained from upstream Aider, kept as an example of the
+event format.
 
 ## Reporting issues
 
-If you have concerns about any of the analytics that patch is collecting
-or our data practices
-please contact us by opening a
-[GitHub Issue](https://github.com/PierrunoYT/patch/issues).
+If you have concerns about the analytics code or our data practices, please open
+a [GitHub Issue](https://github.com/PierrunoYT/patch/issues).
 
 ## Privacy policy
 
-Please see patch's
-[privacy policy](/docs/legal/privacy.html)
-for more details.
-
+The [privacy policy](/docs/legal/privacy.html) retained on this site is upstream
+Aider's and describes the aider.chat service. It does not describe Patch, which
+operates no website and no analytics service.

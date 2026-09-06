@@ -543,7 +543,7 @@ Environment variable: `PATCH_TEST`
 ## Analytics:
 
 ### `--analytics`
-Enable/disable analytics for current session (default: random)  
+Enable/disable analytics for current session (off unless --analytics-posthog-project-api-key is set)  
 Environment variable: `PATCH_ANALYTICS`  
 Aliases:
   - `--analytics`
@@ -563,7 +563,7 @@ Send analytics to custom PostHog instance
 Environment variable: `PATCH_ANALYTICS_POSTHOG_HOST`  
 
 ### `--analytics-posthog-project-api-key ANALYTICS_POSTHOG_PROJECT_API_KEY`
-Send analytics to custom PostHog project  
+Send analytics to a PostHog project you control; required for any collection  
 Environment variable: `PATCH_ANALYTICS_POSTHOG_PROJECT_API_KEY`  
 
 ## Upgrading:

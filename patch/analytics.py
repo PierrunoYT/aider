@@ -52,8 +52,9 @@ def is_uuid_in_percentage(uuid_str, percent):
     return uuid_str[:6] <= threshold
 
 
-mixpanel_project_token = "6da9a43058a5d1b9f3353153921fb04d"
-posthog_project_api_key = "phc_99T7muzafUMMZX15H8XePbMSreEUzahHbtWjy3l5Qbv"
+# Patch does not operate an analytics service, and deliberately ships no default
+# destination for events. Collection stays off unless the user points it at a
+# PostHog project they control with --analytics-posthog-project-api-key.
 posthog_host = "https://us.i.posthog.com"
 
 
@@ -98,12 +99,17 @@ class Analytics:
             self.disable(False)
             return
 
-        # self.mp = Mixpanel(mixpanel_project_token)
+        if not self.custom_posthog_project_api_key:
+            # No destination is configured, so there is nothing to send events to.
+            self.disable(False)
+            return
+
         self.ph = Posthog(
-            project_api_key=self.custom_posthog_project_api_key or posthog_project_api_key,
+            project_api_key=self.custom_posthog_project_api_key,
             host=self.custom_posthog_host or posthog_host,
             on_error=self.posthog_error,
-            enable_exception_autocapture=True,
+            # Autocapture bypasses the redaction applied in event(), so leave it off.
+            enable_exception_autocapture=False,
             super_properties=self.get_system_info(),  # Add system info to all events
         )
 
@@ -118,6 +124,10 @@ class Analytics:
 
     def need_to_ask(self, args_analytics):
         if args_analytics is False:
+            return False
+
+        if not self.custom_posthog_project_api_key:
+            # Nothing would be collected, so never ask the user to opt in.
             return False
 
         could_ask = not self.asked_opt_in and not self.permanently_disable

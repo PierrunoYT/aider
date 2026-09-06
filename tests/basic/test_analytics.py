@@ -33,7 +33,7 @@ def test_analytics_initialization(temp_data_dir):
 
 
 def test_analytics_enable_disable(temp_data_dir):
-    analytics = Analytics()
+    analytics = Analytics(posthog_project_api_key="phc_test")
     analytics.asked_opt_in = True
 
     analytics.enable()
@@ -49,6 +49,26 @@ def test_analytics_enable_disable(temp_data_dir):
     assert analytics.permanently_disable is True
 
 
+def test_analytics_stay_off_without_a_destination(temp_data_dir):
+    """Patch ships no analytics destination, so opting in must not send anything."""
+    analytics = Analytics()
+    analytics.asked_opt_in = True
+
+    analytics.enable()
+    assert analytics.mp is None
+    assert analytics.ph is None
+
+
+def test_analytics_event_is_a_noop_without_a_destination(temp_data_dir):
+    analytics = Analytics()
+    analytics.asked_opt_in = True
+    analytics.enable()
+
+    # No provider and no logfile means the event is dropped rather than sent.
+    assert analytics.event("test_event", test_key="test_value") is None
+    assert analytics.ph is None
+
+
 def test_analytics_data_persistence(temp_data_dir):
     analytics1 = Analytics()
     user_id = analytics1.user_id
@@ -58,7 +78,7 @@ def test_analytics_data_persistence(temp_data_dir):
 
 
 def test_analytics_event_logging(temp_analytics_file, temp_data_dir):
-    analytics = Analytics(logfile=temp_analytics_file)
+    analytics = Analytics(logfile=temp_analytics_file, posthog_project_api_key="phc_test")
     analytics.asked_opt_in = True
     analytics.enable()
 
@@ -90,7 +110,7 @@ def test_system_info(temp_data_dir):
 
 
 def test_need_to_ask(temp_data_dir):
-    analytics = Analytics()
+    analytics = Analytics(posthog_project_api_key="phc_test")
     assert analytics.need_to_ask(True) is True
     assert analytics.need_to_ask(False) is False
 
@@ -102,6 +122,16 @@ def test_need_to_ask(temp_data_dir):
 
     analytics.permanently_disable = True
     assert analytics.need_to_ask(True) is False
+
+
+def test_need_to_ask_requires_a_destination(temp_data_dir):
+    """Without a configured project there is nothing to consent to, so never prompt."""
+    analytics = Analytics()
+    analytics.user_id = "000"
+
+    assert analytics.need_to_ask(True) is False
+    assert analytics.need_to_ask(None) is False
+    assert analytics.need_to_ask(False) is False
 
 
 def test_is_uuid_in_percentage():

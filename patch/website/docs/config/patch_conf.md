@@ -343,7 +343,7 @@ cog.outl("```")
 ############
 # Analytics:
 
-## Enable/disable analytics for current session (default: random)
+## Enable/disable analytics for current session (off unless --analytics-posthog-project-api-key is set)
 #analytics: xxx
 
 ## Specify a file to log analytics events
@@ -355,7 +355,7 @@ cog.outl("```")
 ## Send analytics to custom PostHog instance
 #analytics-posthog-host: xxx
 
-## Send analytics to custom PostHog project
+## Send analytics to a PostHog project you control; required for any collection
 #analytics-posthog-project-api-key: xxx
 
 ############

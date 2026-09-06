@@ -642,12 +642,12 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
     if args.analytics is not False:
         if analytics.need_to_ask(args.analytics):
             io.tool_output(
-                "Patch respects your privacy and never collects your code, chat messages, keys or"
-                " personal info."
+                "Analytics would be sent to the PostHog project you configured. Patch never"
+                " collects your code, chat messages, keys or personal info."
             )
             io.tool_output(f"For more info: {urls.analytics}")
             disable = not io.confirm_ask(
-                "Allow collection of anonymous analytics to help improve patch?"
+                "Allow collection of anonymous analytics to your configured project?"
             )
 
             analytics.asked_opt_in = True
