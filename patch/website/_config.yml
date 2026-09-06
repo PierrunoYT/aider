@@ -32,16 +32,16 @@ exclude:
 aux_links:
   "GitHub":
     - "https://github.com/PierrunoYT/patch"
-  "Discord":
-    - "https://discord.gg/Y7X7bhMQFV"
+  "Issues":
+    - "https://github.com/PierrunoYT/patch/issues"
   "Blog":
     - "/blog/"
 
 nav_external_links:
   - title: "GitHub"
     url: "https://github.com/PierrunoYT/patch"
-  - title: "Discord"
-    url: "https://discord.gg/Y7X7bhMQFV"
+  - title: "Issues"
+    url: "https://github.com/PierrunoYT/patch/issues"
 
 repository: PierrunoYT/patch
 

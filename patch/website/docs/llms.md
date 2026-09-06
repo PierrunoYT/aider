@@ -42,8 +42,8 @@ local models that provide an
 {: .no_toc }
 
 Check
-[Patch's LLM leaderboards](https://aider.chat/docs/leaderboards/)
-to see which models work best with patch.
+[Aider's LLM leaderboards](https://aider.chat/docs/leaderboards/)
+to see which models work best with this class of tool.
 
 Be aware that patch may not work well with less capable models.
 If you see the model returning code, but patch isn't able to edit your files
