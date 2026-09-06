@@ -55,6 +55,10 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Mask every credential in `/settings`, `--verbose` output, and the command line
+  written to the chat history, not just the OpenAI and Anthropic key options. Keys
+  passed as `--api-key provider=KEY` and secrets passed as `--set-env` were
+  previously written out in full.
 - Time out the GitHub Copilot token exchange, which sits in front of every model
   request and could otherwise stall indefinitely.
 - Delete voice recordings once the turn ends. A WAV recording was left in the

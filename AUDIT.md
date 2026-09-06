@@ -446,7 +446,7 @@ that a timeout is raised rather than swallowed. The other outbound calls, in
 
 ---
 
-### [Medium] Settings and command-line logging expose provider secrets
+### Resolved: [Medium] Settings and command-line logging expose provider secrets
 
 **Location:** `patch/format_settings.py:1-26`; `patch/main.py:745-751`; `patch/io.py:995-1002`; `patch/args.py:97-112,269-285`
 
@@ -457,6 +457,17 @@ that a timeout is raised rather than swallowed. The other outbound calls, in
 **Evidence:** The independent audit reproduced DeepSeek and arbitrary environment secrets in formatted settings and history while only the OpenAI key was masked.
 
 **Recommendation:** Redact by argument semantics and secret-name patterns. Mask the value side of every `PROVIDER=KEY` and `VAR=value`; never persist raw command-line secret values. Apply the same scrubber to parser environment-value output.
+
+**Status:** Resolved as recommended. `scrub_sensitive_info()` now collects every
+credential in the arguments, the dedicated key options, any option whose name looks
+like a secret, every `--api-key provider=key` value, and `--set-env` values that
+are secret-named or long enough to be a credential, and masks all of them wherever
+they appear, including `parser.format_values()` and the command line written to the
+chat history. `format_settings()` also masks the value side of every `--api-key`
+and `--set-env` pair structurally. Short, obviously non-secret values such as
+`DEBUG=1` are left alone in free text, since blanking them would mangle unrelated
+output, while still being masked in the settings listing.
+`tests/basic/test_format_settings.py` covers each of these.
 
 **Confidence:** High
 

@@ -68,5 +68,7 @@ elsewhere. Any `.patch.tags.cache.v*` directory left by an earlier version is un
 and safe to delete. `--input-history-file` and `--chat-history-file` change history
 destinations.
 History, logs, and verbose settings can contain sensitive data; do not publish them
-without review. Patch does not migrate `.aider*` or `AIDER_*` settings automatically.
+without review. Patch masks the credentials it knows about, including `--api-key`
+and secret-looking `--set-env` values, in `/settings`, verbose output, and the
+command line it records. Patch does not migrate `.aider*` or `AIDER_*` settings automatically.
 See [analytics](analytics.md) for the disabled-by-default telemetry instrumentation.
