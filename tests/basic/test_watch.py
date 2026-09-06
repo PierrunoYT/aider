@@ -164,3 +164,70 @@ def test_ai_comment_pattern():
         len(lisp_lines) == lisp_expected
     ), f"Expected {lisp_expected} AI comments in Lisp fixture, found {len(lisp_lines)}"
     assert lisp_has_bang == "!", "Expected at least one bang (!) comment in Lisp fixture"
+
+
+class RecordingIO(InputOutput):
+    """An IO that answers confirmations with a fixed reply and remembers them."""
+
+    def __init__(self, answer=True, **kwargs):
+        super().__init__(**kwargs)
+        self.answer = answer
+        self.questions = []
+
+    def confirm_ask(self, question, *args, **kwargs):
+        self.questions.append(question)
+        return self.answer
+
+
+def make_watcher(tmp_path, io, contents):
+    coder = MinimalCoder(io)
+    coder.root = str(tmp_path)
+
+    for name, text in contents.items():
+        path = tmp_path / name
+        path.write_text(text)
+        coder.abs_fnames.add(str(path))
+
+    watcher = FileWatcher(coder, root=str(tmp_path))
+    watcher.changed_files = set(coder.abs_fnames)
+
+    return watcher
+
+
+def test_the_first_watched_action_is_confirmed(tmp_path):
+    io = RecordingIO(answer=True, pretty=False, fancy_input=False)
+    watcher = make_watcher(tmp_path, io, {"one.py": "x = 1  # do it AI!\n"})
+
+    first = watcher.process_changes()
+    second = watcher.process_changes()
+
+    assert first and second
+    # Asked once, then trusted for the rest of the session
+    assert len(io.questions) == 1
+
+
+def test_a_declined_action_produces_no_turn(tmp_path):
+    io = RecordingIO(answer=False, pretty=False, fancy_input=False)
+    watcher = make_watcher(tmp_path, io, {"one.py": "x = 1  # do it AI!\n"})
+
+    assert watcher.process_changes() == ""
+    assert not watcher.watch_confirmed
+
+
+def test_a_change_request_outranks_a_question(tmp_path):
+    io = RecordingIO(answer=True, pretty=False, fancy_input=False)
+    watcher = make_watcher(
+        tmp_path,
+        io,
+        {
+            "a_question.py": "x = 1  # what is this AI?\n",
+            "b_request.py": "y = 2  # fix this AI!\n",
+        },
+    )
+
+    # Whatever order the files come back in, the request wins over the question
+    for _ in range(5):
+        watcher.changed_files = set(watcher.coder.abs_fnames)
+        result = watcher.process_changes()
+        assert not result.startswith("/ask")
+        assert "follow their instructions" in result

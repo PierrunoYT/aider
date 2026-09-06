@@ -80,6 +80,9 @@ class FileWatcher:
         self.watcher_thread = None
         self.changed_files = set()
         self.gitignores = gitignores
+        # Whether the user has agreed to act on comments written by whatever
+        # edits the watched files, which is not necessarily them
+        self.watch_confirmed = False
 
         self.gitignore_spec = load_gitignores(
             [Path(g) for g in self.gitignores] if self.gitignores else []
@@ -178,15 +181,34 @@ class FileWatcher:
             self.watcher_thread = None
             self.stop_event = None
 
+    def confirm_watch(self):
+        """Ask once before acting on AI comments a file change brought in.
+
+        Anything that writes the watched files, a formatter or a build task as
+        much as the user, can leave an AI comment, so the first one needs an
+        answer from the user before it becomes a turn.
+        """
+
+        if self.watch_confirmed:
+            return True
+
+        if not self.io.confirm_ask("Act on the AI comments in your files?"):
+            self.io.tool_output("Not acting on the AI comments. Remove them or answer yes.")
+            return False
+
+        self.watch_confirmed = True
+        return True
+
     def process_changes(self):
         """Get any detected file changes"""
 
-        has_action = None
+        actions = set()
         added = False
-        for fname in self.changed_files:
+        # Sorted, so which file is seen first does not decide anything
+        for fname in sorted(self.changed_files):
             _, _, action = self.get_ai_comments(fname)
             if action in ("!", "?"):
-                has_action = action
+                actions.add(action)
 
             if fname in self.coder.abs_fnames:
                 continue
@@ -199,11 +221,17 @@ class FileWatcher:
                 added = True
             self.io.tool_output(f"Added {rel_fname} to the chat")
 
-        if not has_action:
+        if not actions:
             if added:
                 self.io.tool_output(
                     "End your comment with AI! to request changes or AI? to ask questions"
                 )
+            return ""
+
+        # A request to change files outranks a question about them
+        has_action = "!" if "!" in actions else "?"
+
+        if not self.confirm_watch():
             return ""
 
         if self.analytics:
@@ -212,7 +240,7 @@ class FileWatcher:
 
         if has_action == "!":
             res = watch_code_prompt
-        elif has_action == "?":
+        else:
             res = watch_ask_prompt
 
         # Refresh all AI comments from tracked files

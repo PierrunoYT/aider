@@ -55,6 +55,9 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Ask once per session before acting on an AI comment found by `--watch-files`,
+  since anything that writes those files can leave one, and make a change request
+  outrank a question when both appear instead of depending on file order.
 - Stop reporting internal errors as Git failures. Git operations caught
   `TypeError`, `ValueError`, `AttributeError`, `AssertionError`, `IndexError`, and
   `BufferError` as well as real Git errors, so a defect surfaced as "Unable to

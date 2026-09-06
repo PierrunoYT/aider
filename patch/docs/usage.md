@@ -55,8 +55,11 @@ credentials; the recording is sent to that provider and deleted locally once the
 turn ends. Use `/paste` for clipboard content and `/editor` to write a prompt
 in your editor. `/multiline-mode` toggles multiline input.
 
-`--watch-files` reacts to AI comment markers in source files. Only enable it in
-trusted projects: other local processes that write files can trigger model turns.
+`--watch-files` reacts to AI comment markers in source files. Anything that writes
+those files, a formatter, a language server, or a build task, can leave a marker,
+so Patch asks once per session before acting on one and then trusts the rest.
+`AI!` requests changes, `AI?` asks a question, and a request wins when both are
+present. Only enable it in trusted projects.
 A repository's own configuration cannot set the lint or test commands Patch runs,
 or its credentials and endpoints, unless you pass `--trust-repo-config`. See
 [configuration](config.md#repository-configuration-is-untrusted).

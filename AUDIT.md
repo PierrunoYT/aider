@@ -572,7 +572,7 @@ write, the fallback, dry runs, and symlinks.
 
 ---
 
-### [Medium] File watcher lets any local writer initiate an LLM turn
+### Resolved: [Medium] File watcher lets any local writer initiate an LLM turn
 
 **Location:** `patch/watch.py:80-120,205-265`; `patch/io.py:670-675`
 
@@ -581,6 +581,16 @@ write, the fallback, dry runs, and symlinks.
 **Impact:** Formatters, language servers, build tasks, or compromised dependencies can trigger API spending and model-proposed edits. Normal edit authorization still limits writes, so this is not direct arbitrary code execution.
 
 **Recommendation:** Require confirmation before the first watcher-triggered action from an external file event, make action precedence deterministic, and document the local-writer trust assumption.
+
+**Status:** Resolved as recommended. `FileWatcher.confirm_watch()` asks before the
+first action of a session and remembers the answer, so an unattended session does
+not act on a marker some other process wrote, while `--yes-always` keeps the
+hands-free loop. Changed files are now walked in sorted order and the actions are
+collected into a set, with a change request outranking a question, so the outcome
+no longer depends on which file the watcher happened to see last. The trust
+assumption is documented in `patch/docs/usage.md`.
+`tests/basic/test_watch.py` covers the single confirmation, a declined action, and
+the precedence.
 
 **Confidence:** High
 
