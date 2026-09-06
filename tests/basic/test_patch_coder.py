@@ -121,5 +121,79 @@ class TestPatchCoderMoves(unittest.TestCase):
         self.assertFalse(source.exists())
 
 
+class TestPatchCoderSentinels(unittest.TestCase):
+    """A patch without both sentinels may have been cut off."""
+
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+
+        self.original_cwd = os.getcwd()
+        self.tempdir = tempfile.mkdtemp()
+        os.chdir(self.tempdir)
+
+        self.source = Path("source.txt")
+        self.source.write_text("one\n")
+
+    def tearDown(self):
+        os.chdir(self.original_cwd)
+        shutil.rmtree(self.tempdir, ignore_errors=True)
+
+    def make_coder(self):
+        return PatchCoder(
+            main_model=self.GPT35,
+            io=InputOutput(yes=True),
+            fnames=[str(self.source)],
+            use_git=False,
+        )
+
+    def test_missing_end_sentinel_is_rejected(self):
+        coder = self.make_coder()
+        coder.partial_response_content = """*** Begin Patch
+*** Update File: source.txt
+@@
+-one
++two
+"""
+
+        with self.assertRaises(ValueError):
+            coder.get_edits()
+
+        coder.apply_updates()
+
+        self.assertEqual(self.source.read_text(), "one\n")
+        self.assertIn("*** End Patch", coder.reflected_message)
+
+    def test_missing_begin_sentinel_is_rejected(self):
+        coder = self.make_coder()
+        coder.partial_response_content = """*** Update File: source.txt
+@@
+-one
++two
+*** End Patch
+"""
+
+        with self.assertRaises(ValueError):
+            coder.get_edits()
+
+        self.assertEqual(self.source.read_text(), "one\n")
+
+    def test_content_that_is_not_a_patch_is_ignored(self):
+        coder = self.make_coder()
+        coder.partial_response_content = "I had a look, and everything seems fine.\n"
+
+        self.assertEqual(coder.get_edits(), [])
+
+    def test_prose_around_the_sentinels_is_allowed(self):
+        coder = self.make_coder()
+        coder.partial_response_content = f"""Here is the change:
+
+{update_patch("source.txt")}
+Let me know what you think.
+"""
+        coder.apply_updates()
+
+        self.assertEqual(self.source.read_text(), "two\n")
+
+
 if __name__ == "__main__":
     unittest.main()

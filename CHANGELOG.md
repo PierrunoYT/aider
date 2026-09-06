@@ -17,6 +17,10 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Security
 
+- Require both `*** Begin Patch` and `*** End Patch` before applying a
+  `patch`-format response, so one that was cut off is sent back to the model
+  instead of half applied. Prose before or after the patch is now ignored rather
+  than breaking the parse.
 - Reject a `whole`-format response whose file listing was never closed instead of
   replacing the file with the part that arrived, and ask the model to send the file
   again. Live previews stay permissive.

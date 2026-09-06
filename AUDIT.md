@@ -6,12 +6,10 @@ This is a mature, feature-rich fork of Aider: an AI pair-programming CLI with Gi
 
 Strengths include a clear CLI entry point, understandable component boundaries, 489 test functions, deliberate confirmation around most model-proposed edits and commands, sensible repository-map caching, and no committed production credentials found.
 
-An independent Claude Opus 5 re-audit was reconciled into this report. It confirmed the path-move finding, disproved the original wheel-content finding, and identified additional high-priority trust-boundary and data-loss issues. The most important remaining problems are:
+An independent Claude Opus 5 re-audit was reconciled into this report. It confirmed the path-move finding, disproved the original wheel-content finding, and identified additional high-priority trust-boundary and data-loss issues.
 
-1. Malformed whole-file and patch responses can be applied rather than rejected, risking silent data loss.
-
-These have since been fixed on `main`, each with regression tests, and their
-findings below carry the details:
+Every high-priority finding has since been fixed on `main`, each with regression
+tests, and the findings below carry the details:
 
 - Repository-local `.patch.conf.yml`, `.env`, and model settings no longer supply
   the settings that run commands or steer API traffic; `--trust-repo-config` opts
@@ -21,6 +19,7 @@ findings below carry the details:
   (issue #1352).
 - Model-requested edits are contained to the project root (issue #1351).
 - Patch-format moves authorize their destination and confirm overwrites (issue #1350).
+- Truncated whole-file and patch responses are refused instead of applied (issues #1353 and #1354).
 
 Additional material risks include known-vulnerable dependencies, filesystem mutation during dry-run validation, incorrect accounting after partial edit failures, OAuth and voice resource leaks, and non-hermetic CI.
 
@@ -234,7 +233,7 @@ reflected message, and that previews still render.
 
 ---
 
-### [High] PatchCoder accepts patches missing the terminal sentinel
+### Resolved: [High] PatchCoder accepts patches missing the terminal sentinel
 
 **Location:** `patch/coders/patch_coder.py:229-254,395-410`
 
@@ -243,6 +242,15 @@ reflected message, and that previews still render.
 **Impact:** A truncated response can be mistaken for a complete patch and written. Patch mode is not currently a model default, which lowers likelihood but does not mitigate data loss once selected.
 
 **Recommendation:** Require both sentinels before returning final edits. If partial parsing is needed for previews, expose a separate non-applying parser mode.
+
+**Status:** Resolved as recommended. `get_edits()` locates `*** Begin Patch` and
+`*** End Patch` and raises a `ValueError` naming the missing one when either is
+absent, so a cut-off patch is reflected back to the model rather than applied.
+Content that does not look like a patch at all still returns no edits with a
+warning. Parsing now runs between the sentinels, so prose around the patch is
+ignored instead of breaking it.
+`tests/basic/test_patch_coder.py::TestPatchCoderSentinels` covers a missing end
+sentinel, a missing begin sentinel, non-patch content, and surrounding prose.
 
 **Confidence:** High
 

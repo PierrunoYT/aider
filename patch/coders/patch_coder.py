@@ -229,15 +229,21 @@ class PatchCoder(Coder):
         if not content or not content.strip():
             return []
 
-        # Check for patch sentinels
+        # Both sentinels are required. Without the closing one the patch may
+        # simply have been cut off, and applying it would write half an edit.
         lines = content.splitlines()
-        if (
-            len(lines) < 2
-            or not _norm(lines[0]).startswith("*** Begin Patch")
-            # Allow flexible end, might be EOF or just end of stream
-            # or _norm(lines[-1]) != "*** End Patch"
-        ):
-            # Tolerate missing sentinels if content looks like a patch action
+        begin_index = None
+        end_index = None
+        for num, line in enumerate(lines):
+            norm_line = _norm(line)
+            if begin_index is None:
+                if norm_line.startswith("*** Begin Patch"):
+                    begin_index = num
+            elif norm_line == "*** End Patch":
+                end_index = num
+                break
+
+        if begin_index is None or end_index is None:
             is_patch_like = any(
                 _norm(line).startswith(
                     ("@@", "*** Update File:", "*** Add File:", "*** Delete File:")
@@ -248,13 +254,17 @@ class PatchCoder(Coder):
                 # If it doesn't even look like a patch, return empty
                 self.io.tool_warning("Response does not appear to be in patch format.")
                 return []
-            # If it looks like a patch but lacks sentinels, try parsing anyway but warn.
-            self.io.tool_warning(
-                "Patch format warning: Missing '*** Begin Patch'/'*** End Patch' sentinels."
+
+            missing = "*** Begin Patch" if begin_index is None else "*** End Patch"
+            raise ValueError(
+                f"The patch is missing its {missing} line, so it may have been cut off."
+                " Send the complete patch again, between *** Begin Patch and"
+                " *** End Patch."
             )
-            start_index = 0
-        else:
-            start_index = 1  # Skip "*** Begin Patch"
+
+        # Parse between the sentinels, so surrounding prose is not patch content
+        lines = lines[:end_index]
+        start_index = begin_index + 1
 
         # Identify files needed for context lookups during parsing
         needed_paths = identify_files_needed(content)
