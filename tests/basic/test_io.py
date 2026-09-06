@@ -606,5 +606,72 @@ class TestInputOutputFormatFiles(unittest.TestCase):
         )
 
 
+class TestWriteText(unittest.TestCase):
+    """A write either lands in full or leaves the previous file alone."""
+
+    def setUp(self):
+        self.io = InputOutput(pretty=False, fancy_input=False)
+
+    def test_writes_a_new_file(self):
+        with ChdirTemporaryDirectory():
+            self.io.write_text("new.txt", "hello\n")
+
+            self.assertEqual(Path("new.txt").read_text(), "hello\n")
+
+    def test_replaces_an_existing_file(self):
+        with ChdirTemporaryDirectory():
+            Path("file.txt").write_text("before\n")
+
+            self.io.write_text("file.txt", "after\n")
+
+            self.assertEqual(Path("file.txt").read_text(), "after\n")
+
+    def test_a_failed_write_leaves_the_old_content(self):
+        with ChdirTemporaryDirectory():
+            Path("file.txt").write_text("original\n")
+
+            io = InputOutput(pretty=False, fancy_input=False, encoding="ascii")
+            with self.assertRaises(UnicodeEncodeError):
+                io.write_text("file.txt", "café\n")
+
+            self.assertEqual(Path("file.txt").read_text(), "original\n")
+            # and no temporary file is left behind
+            self.assertEqual([path.name for path in Path(".").iterdir()], ["file.txt"])
+
+    def test_an_unreplaceable_file_is_still_written(self):
+        # Windows refuses to replace a file another process holds open
+        with ChdirTemporaryDirectory():
+            Path("file.txt").write_text("original\n")
+
+            with patch("os.replace", side_effect=PermissionError("file in use")):
+                self.io.write_text("file.txt", "replacement\n")
+
+            self.assertEqual(Path("file.txt").read_text(), "replacement\n")
+            self.assertEqual([path.name for path in Path(".").iterdir()], ["file.txt"])
+
+    def test_dry_run_writes_nothing(self):
+        with ChdirTemporaryDirectory():
+            io = InputOutput(pretty=False, fancy_input=False, dry_run=True)
+
+            io.write_text("new.txt", "hello\n")
+
+            self.assertFalse(Path("new.txt").exists())
+
+    def test_writes_through_a_symlink(self):
+        with ChdirTemporaryDirectory():
+            target = Path("target.txt")
+            target.write_text("before\n")
+            link = Path("link.txt")
+            try:
+                link.symlink_to(target)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks are not available here")
+
+            self.io.write_text("link.txt", "after\n")
+
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(target.read_text(), "after\n")
+
+
 if __name__ == "__main__":
     unittest.main()

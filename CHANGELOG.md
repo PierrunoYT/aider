@@ -55,6 +55,11 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Write edited files by renaming a complete temporary file over the old one, so a
+  write that fails part-way leaves the previous file intact instead of an empty or
+  half-written one. Permissions are preserved, symlinks still update their target,
+  and where the rename is refused, as on Windows when another process holds the
+  file open, Patch writes in place as before.
 - Let the `patch` format add a file. Authorizing a new file creates an empty
   placeholder, which the ADD action then rejected as an existing file, so every add
   failed and left an empty file behind.

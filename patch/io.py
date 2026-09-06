@@ -3,6 +3,7 @@ import functools
 import os
 import shutil
 import signal
+import stat
 import subprocess
 import time
 import webbrowser
@@ -475,6 +476,51 @@ class InputOutput:
                 self.tool_error("Use --encoding to set the unicode encoding.")
             return
 
+    def replace_file(self, filename, content):
+        """Write the complete file, or leave the previous one in place.
+
+        Writing in place truncates the destination before the new content is
+        written, so an interrupted or failed write leaves an empty or partial
+        file. Write a temporary file beside it instead and rename it over.
+        """
+
+        path = Path(filename)
+        if path.is_symlink():
+            # Update what the link points at, rather than replacing the link
+            path = Path(os.path.realpath(path))
+
+        tmp_path = path.with_name(f".{path.name}.{os.getpid()}.patch.tmp")
+
+        try:
+            # O_EXCL so an existing file or symlink at that name is never followed
+            fd = os.open(str(tmp_path), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
+            with os.fdopen(fd, "w", encoding=self.encoding, newline=self.newline) as f:
+                f.write(content)
+                f.flush()
+                os.fsync(f.fileno())
+
+            if path.exists():
+                # Keep the permissions of the file being replaced
+                try:
+                    os.chmod(str(tmp_path), stat.S_IMODE(path.stat().st_mode))
+                except OSError:
+                    pass
+
+            try:
+                os.replace(str(tmp_path), str(path))
+            except OSError:
+                # Windows refuses to replace a file another process has open, so
+                # fall back to writing in place rather than losing the edit
+                with open(str(path), "w", encoding=self.encoding, newline=self.newline) as f:
+                    f.write(content)
+                os.unlink(str(tmp_path))
+        except BaseException:
+            try:
+                os.unlink(str(tmp_path))
+            except OSError:
+                pass
+            raise
+
     def write_text(self, filename, content, max_retries=5, initial_delay=0.1):
         """
         Writes content to a file, retrying with progressive backoff if the file is locked.
@@ -490,8 +536,7 @@ class InputOutput:
         delay = initial_delay
         for attempt in range(max_retries):
             try:
-                with open(str(filename), "w", encoding=self.encoding, newline=self.newline) as f:
-                    f.write(content)
+                self.replace_file(filename, content)
                 return  # Successfully wrote the file
             except PermissionError as err:
                 if attempt < max_retries - 1:

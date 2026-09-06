@@ -495,7 +495,7 @@ add onto a file that already has content.
 
 ---
 
-### [Medium] File replacement is non-atomic
+### Resolved: [Medium] File replacement is non-atomic
 
 **Location:** `patch/io.py:478-507`
 
@@ -504,6 +504,16 @@ add onto a file that already has content.
 **Impact:** Disk exhaustion, process interruption, encoding failure, or I/O failure after truncation can leave an empty or partial file. This amplifies malformed-response failures.
 
 **Recommendation:** Write and `fsync` a temporary file in the destination directory, preserve intended permissions where applicable, then use `os.replace()`.
+
+**Status:** Resolved as recommended. `InputOutput.replace_file()` writes a
+temporary file beside the destination, opened with `O_EXCL`, fsyncs it, copies the
+permissions of the file being replaced, and renames it over. A write that fails
+part-way, on encoding or disk space, leaves the previous file untouched and no
+temporary behind. Writing through a symlink still updates the file it points at.
+Where `os.replace()` itself fails, which on Windows means another process holds
+the file open, it falls back to writing in place rather than losing the edit.
+`tests/basic/test_io.py::TestWriteText` covers new files, replacement, a failed
+write, the fallback, dry runs, and symlinks.
 
 **Confidence:** High
 
