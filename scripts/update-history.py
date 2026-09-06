@@ -88,9 +88,7 @@ def main():
         re.MULTILINE,
     )
     next_version_idx = (
-        version_idx + len(version_header) + next_version_match.start()
-        if next_version_match
-        else -1
+        version_idx + len(version_header) + next_version_match.start() if next_version_match else -1
     )
     if next_version_idx == -1:
         # No next version found, use the rest of the file

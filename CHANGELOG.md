@@ -17,6 +17,8 @@ For the inherited release history, see [the previous changelog](HISTORY.md).
 
 ### Fixed
 
+- Fixed Python 3.10 installation of the help and browser extras by generating dependency pins with Python and platform markers across the supported environments. Added regression checks for consistent pins across base and optional dependencies.
+- Fixed Black formatting in the release-history helper so pre-commit checks pass.
 - Included Python subpackages, model metadata and settings, tree-sitter queries, and help documentation in the built package.
 
 ### Removed

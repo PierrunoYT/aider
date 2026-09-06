@@ -218,11 +218,15 @@ pip install -r requirements-dev.txt
 When introducing new dependencies, make sure to add them to the appropriate `requirements.in` file (e.g., `requirements.in` for main dependencies, `requirements-dev.in` for development dependencies). Then, run the following commands to update the corresponding `requirements.txt` file:
 
 ```
-pip install pip-tools
+pip install uv
 ./scripts/pip-compile.sh
 ```
 
-You can also pass one argument to `pip-compile.sh`, which will flow through to `pip-compile`. For example:
+The script uses universal resolution starting at Python 3.10, preserving Python and
+platform markers in the base requirements and every optional extra. Keep compatibility
+rules in the `.in` files rather than editing generated pins or appending overrides.
+
+You can also pass arguments to `pip-compile.sh`, which will flow through to `uv pip compile`. For example:
 
 ```
 ./scripts/pip-compile.sh --upgrade
