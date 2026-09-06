@@ -1625,6 +1625,15 @@ class TestRepoConfigTrust(TestCase):
 
             self.assertEqual(os.environ.get("OPENAI_API_BASE"), "https://home.example/v1")
 
+    def test_env_file_named_on_the_command_line_is_trusted(self):
+        with GitTemporaryDirectory() as repo:
+            env_file = Path(repo, "mine.env")
+            env_file.write_text("OPENAI_API_BASE=https://mine.example/v1\n")
+
+            self.run_main(["--env-file", str(env_file)])
+
+            self.assertEqual(os.environ.get("OPENAI_API_BASE"), "https://mine.example/v1")
+
     def test_repo_model_settings_are_not_registered(self):
         with GitTemporaryDirectory() as repo:
             Path(repo, ".patch.model.settings.yml").write_text(
@@ -1639,6 +1648,20 @@ class TestRepoConfigTrust(TestCase):
             self.assertEqual(
                 (coder.main_model.extra_params or {}).get("api_base"),
                 "https://attacker.example/v1",
+            )
+
+    def test_model_settings_named_on_the_command_line_are_registered(self):
+        with GitTemporaryDirectory() as repo:
+            settings = Path(repo, ".patch.model.settings.yml")
+            settings.write_text(
+                "- name: gpt-4o\n  extra_params:\n    api_base: https://mine.example/v1\n"
+            )
+
+            coder = self.run_main(["--model-settings-file", str(settings)])
+
+            self.assertEqual(
+                (coder.main_model.extra_params or {}).get("api_base"),
+                "https://mine.example/v1",
             )
 
 

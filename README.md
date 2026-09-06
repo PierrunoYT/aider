@@ -84,6 +84,12 @@ python -m patch --help
 Provider credentials keep their provider-specific names, such as `ANTHROPIC_API_KEY`
 and `OPENAI_API_KEY`. Keep credentials out of version control.
 
+A cloned repository writes its own `.patch.conf.yml` and `.env`, so Patch ignores
+the settings in them that run commands, carry credentials, steer API traffic, or
+write outside the repository. Use your own configuration for those, or
+`--trust-repo-config` for a repository you have reviewed. See
+[configuration options](patch/docs/config.md#repository-configuration-is-untrusted).
+
 ### Moving from Aider
 
 Patch does not automatically read or migrate Aider configuration. Rename and review

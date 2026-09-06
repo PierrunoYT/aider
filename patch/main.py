@@ -144,13 +144,23 @@ def is_untrusted_env_name(name):
     )
 
 
-def untrusted_default_path(fname, default, trust_repo_config):
+def flag_given(argv, flag):
+    """Did the user name this option on the command line?"""
+
+    for arg in argv:
+        if arg == flag or arg.startswith(f"{flag}="):
+            return True
+
+    return False
+
+
+def untrusted_default_path(fname, default, trusted):
     """Drop a path only because it is the default, which points into the repo.
 
     A path the user named is theirs, wherever it points.
     """
 
-    if trust_repo_config or fname != default:
+    if trusted or fname != default:
         return fname
 
     return None
@@ -560,12 +570,12 @@ def generate_search_path_list(default_file, git_root, command_line_file, repo_fi
 
 
 def register_models(git_root, model_settings_fname, io, verbose=False, trust_repo_config=False):
+    # Model settings can name an endpoint through extra_params, so the ones a
+    # repository supplies are only searched for when the user trusts it.
     model_settings_files = generate_search_path_list(
         DEFAULT_MODEL_SETTINGS_FILE,
         git_root,
-        untrusted_default_path(
-            model_settings_fname, DEFAULT_MODEL_SETTINGS_FILE, trust_repo_config
-        ),
+        model_settings_fname,
         repo_files=trust_repo_config,
     )
 
@@ -780,9 +790,10 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
 
     trusted_env_files = None
     if not args.trust_repo_config:
-        # The default .env sits in the repository; a path the user asked for does not.
+        # The default .env sits in the repository; a path the user asked for is theirs.
         trusted_env_files = []
-        if args.env_file and args.env_file != default_env_file(git_root):
+        named = flag_given(argv, "--env-file") or args.env_file != default_env_file(git_root)
+        if args.env_file and named:
             trusted_env_files.append(args.env_file)
 
     # Load the .env file specified in the arguments
@@ -1055,7 +1066,11 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
 
     register_models(
         git_root,
-        args.model_settings_file,
+        untrusted_default_path(
+            args.model_settings_file,
+            DEFAULT_MODEL_SETTINGS_FILE,
+            args.trust_repo_config or flag_given(argv, "--model-settings-file"),
+        ),
         io,
         verbose=args.verbose,
         trust_repo_config=args.trust_repo_config,

@@ -9,6 +9,9 @@ project keys have been removed. Patch operates no analytics service.
 The inherited instrumentation can be enabled with both
 `--analytics-posthog-project-api-key KEY` and `--analytics`. The first time,
 Patch asks you to confirm. `--analytics-posthog-host HOST` selects a custom host.
+These four options are ignored when a repository's own configuration supplies
+them, so a checkout cannot point your telemetry at its own project; see
+[configuration](config.md#repository-configuration-is-untrusted).
 `--no-analytics` disables collection for the session;
 `python -m patch --analytics-disable` records a permanent opt-out.
 

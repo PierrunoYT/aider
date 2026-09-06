@@ -44,6 +44,9 @@ in your editor. `/multiline-mode` toggles multiline input.
 
 `--watch-files` reacts to AI comment markers in source files. Only enable it in
 trusted projects: other local processes that write files can trigger model turns.
+A repository's own configuration cannot set the lint or test commands Patch runs,
+or its credentials and endpoints, unless you pass `--trust-repo-config`. See
+[configuration](config.md#repository-configuration-is-untrusted).
 The experimental `--browser` UI requires the [browser extra](install.md#browser-ui).
 It binds to `127.0.0.1` and has no authentication, so only override
 `PATCH_GUI_ADDRESS` on a network you trust.

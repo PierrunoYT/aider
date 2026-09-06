@@ -191,6 +191,13 @@ pytest tests/basic/test_coder.py
 pytest tests/basic/test_coder.py::TestCoder::test_specific_case
 ```
 
+Tests should not depend on your machine. `tests/conftest.py` points
+`PATCH_TAGS_CACHE_DIR` at a temporary directory so repo map caches stay out of
+`~/.patch/caches`, and the `main()` tests scrub provider credentials from the
+environment, which otherwise decide which model is selected. Ambient Git
+configuration is not isolated yet, so global commit signing or hooks can still
+affect results.
+
 #### Continuous Integration
 
 The project uses GitHub Actions for continuous integration. The testing workflows are defined in the following files:

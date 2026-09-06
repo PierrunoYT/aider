@@ -6,6 +6,24 @@ errors see [models](models.md#api-keys). Report reproducible problems in
 [Patch issues](https://github.com/PierrunoYT/patch/issues), omitting credentials,
 private code, and unredacted logs.
 
+## A setting from the repository is ignored
+
+Patch reports `Ignoring ... which the repository supplies` when a checkout's own
+`.patch.conf.yml` or `.env` sets something that runs commands, carries
+credentials, steers API traffic, or writes outside the repository. Move the
+setting to `~/.patch.conf.yml`, `~/.env`, a `--config` or `--env-file` you name,
+or the command line. To honor a repository you have reviewed, run it with
+`--trust-repo-config`. The same applies to a repository's
+`.patch.model.settings.yml`. See
+[repository configuration is untrusted](config.md#repository-configuration-is-untrusted).
+
+## The browser UI is not reachable from another machine
+
+`--browser` listens on `127.0.0.1` because the UI has no authentication and can
+edit the repository. `PATCH_GUI_ADDRESS` changes the address; only use it on a
+network you trust. Each browser session keeps its own chat history and files, so
+reloading the page starts a new session.
+
 ## Edit errors
 
 An edit error means Patch could not apply the model's requested format or match
