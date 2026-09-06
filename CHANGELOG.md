@@ -55,6 +55,10 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Summarize the whole chat history instead of only the part that fit in one
+  request. Messages between the summarized slice and the retained tail were
+  dropped without a word, and the slice was taken from the oldest end, so the
+  context nearest the conversation was the first to go.
 - Ask once per session before acting on an AI comment found by `--watch-files`,
   since anything that writes those files can leave one, and make a change request
   outrank a question when both appear instead of depending on file order.

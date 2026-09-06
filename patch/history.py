@@ -73,18 +73,7 @@ class ChatSummary:
         model_max_input_tokens = self.models[0].info.get("max_input_tokens") or 4096
         model_max_input_tokens -= 512  # reserve buffer for safety
 
-        keep = []
-        total = 0
-
-        # Iterate in original order, summing tokens until limit
-        for tokens, msg in sized_head:
-            total += tokens
-            if total > model_max_input_tokens:
-                break
-            keep.append(msg)
-        # No need to reverse lists back and forth
-
-        summary = self.summarize_all(keep)
+        summary = self.summarize_head(sized_head, model_max_input_tokens)
 
         # If the combined summary and tail still fits, return directly
         summary_tokens = self.token_count(summary)
@@ -94,6 +83,31 @@ class ChatSummary:
 
         # Otherwise recurse with increased depth
         return self.summarize_real(summary + tail, depth + 1)
+
+    def summarize_head(self, sized_head, max_input_tokens):
+        """Summarize every message in the head, in chronological order.
+
+        The head can be larger than the model's input budget, so it is
+        summarized in chunks, each one carrying the summary so far. Taking only
+        the messages that fit dropped the ones in between: they were neither
+        summarized nor kept, so requirements and decisions from the middle of a
+        conversation disappeared without a word.
+        """
+
+        summary = []
+        chunk = []
+        chunk_tokens = 0
+
+        for tokens, msg in sized_head:
+            if chunk and self.token_count(summary) + chunk_tokens + tokens > max_input_tokens:
+                summary = self.summarize_all(summary + chunk)
+                chunk = []
+                chunk_tokens = 0
+
+            chunk.append(msg)
+            chunk_tokens += tokens
+
+        return self.summarize_all(summary + chunk)
 
     def summarize_all(self, messages):
         content = ""

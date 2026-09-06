@@ -556,7 +556,7 @@ write, the fallback, dry runs, and symlinks.
 
 ---
 
-### [Medium] History summarization can silently discard unsummarized messages
+### Resolved: [Medium] History summarization can silently discard unsummarized messages
 
 **Location:** `patch/history.py:45-96`
 
@@ -567,6 +567,15 @@ write, the fallback, dry runs, and symlinks.
 **Evidence:** The independent probe used unique message IDs and observed only ID0 reach the summarizer while only ID5 remained; ID1–ID4 vanished.
 
 **Recommendation:** Chunk and summarize the complete head recursively. Add a conservation test asserting every uniquely marked message is either supplied to a summarizer call or retained in the tail.
+
+**Status:** Resolved as recommended. `ChatSummary.summarize_head()` summarizes the
+whole head in chronological order, in chunks that fit the model's input budget,
+each carrying the summary so far, so no message falls between the end of the kept
+slice and the split. This also settles issue #1279, where the head was cut from the
+front and the messages nearest the current conversation were the ones lost.
+`tests/basic/test_history.py::TestSummarizationConservesMessages` marks every
+message and asserts each one reaches a summarizer call or the tail, including when
+the head needs several chunks.
 
 **Confidence:** High
 
