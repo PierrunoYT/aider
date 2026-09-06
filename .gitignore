@@ -17,3 +17,9 @@ patch/_version.py
 .gitattributes
 tmp.benchmarks/
 .docker_bash_history
+
+# Local coding-agent settings and third-party tool state
+.claude/
+.codex/
+.gemini/
+.open-edit/

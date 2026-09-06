@@ -11,6 +11,7 @@ For the inherited release history, see [the previous changelog](HISTORY.md).
 
 ### Changed
 
+- Ignored local coding-agent settings (`.claude/`, `.codex/`, `.gemini/`) and third-party tool state (`.open-edit/`) so they stay out of the repository. Session-start hooks are a per-developer choice and should not run automatically for everyone who clones.
 - Show a terminal notice with the available version and upgrade command when a newer `patch-code` release is available. Reuse successful checks for 24 hours, keep showing cached notices on launch, and leave installation to the user. Failed checks do not interrupt normal startup.
 - Rebranded the application, browser UI, logo, and documentation from Aider to Patch.
 - Adopted matching hand-coded SVG logos in the root `assets/` folder: a 2048 × 2048 P-only icon (`assets/logo-icon.svg`) and a wide PATCH-only wordmark with no separate icon (`assets/logo.svg`). Updated the README to display the wordmark and link both logos; retained matching copies in `patch/website/assets/` for the website. Both use mint geometric shapes on charcoal, equal side margins, and font-independent vector paths, replacing the earlier plus-tile design and old terminal-font generator.
