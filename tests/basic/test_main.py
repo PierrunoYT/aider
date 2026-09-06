@@ -18,9 +18,26 @@ from patch.main import check_gitignore, load_dotenv_files, main, setup_git
 from patch.utils import GitTemporaryDirectory, IgnorantTemporaryDirectory, make_repo
 
 
+def scrub_provider_env():
+    """Remove ambient provider credentials from the environment.
+
+    Model selection reads these, so a key in the developer's or CI environment
+    otherwise decides which model main() picks and makes tests non-deterministic.
+    An ambient OPENROUTER_API_KEY additionally sends a live tier request.
+    """
+
+    for env_var in list(os.environ):
+        if env_var.endswith(("_API_KEY", "_API_BASE", "_API_VERSION")):
+            del os.environ[env_var]
+
+    for env_var in ("VERTEXAI_PROJECT", "VERTEXAI_LOCATION", "OLLAMA_API_BASE"):
+        os.environ.pop(env_var, None)
+
+
 class TestMain(TestCase):
     def setUp(self):
         self.original_env = os.environ.copy()
+        scrub_provider_env()
         os.environ["OPENAI_API_KEY"] = "deadbeef"
         os.environ["PATCH_CHECK_UPDATE"] = "false"
         os.environ["PATCH_ANALYTICS"] = "false"

@@ -25,6 +25,9 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Scrub ambient provider credentials in the `main()` tests, which otherwise decided
+  which model was selected and sent a live OpenRouter tier request with the
+  developer's own key.
 - Use a local HTTP fixture for scraper tests instead of a public site that can
   return bot challenges, and install Pandoc before CI tests to avoid runtime
   download failures on Windows.
