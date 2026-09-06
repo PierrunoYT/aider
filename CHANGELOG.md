@@ -7,6 +7,7 @@ For the inherited release history, see [the previous changelog](HISTORY.md).
 
 ### Changed
 
+- Show a terminal notice with the available version and upgrade command when a newer `patch-code` release is available. Reuse successful checks for 24 hours, keep showing cached notices on launch, and leave installation to the user. Failed checks do not interrupt normal startup.
 - Rebranded the application, browser UI, logo, and documentation from Aider to Patch.
 - Adopted a centered single-tile SVG logo with a mint plus-shaped cutout and white Patch wordmark for the README and website, replacing the old terminal-font logo and its generator.
 - Renamed the PyPI distribution to `patch-code` and the Python package and command to `patch`. Patch can also be launched with `python -m patch` to avoid conflicts with the Unix `patch` utility.

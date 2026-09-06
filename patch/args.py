@@ -605,7 +605,7 @@ def get_parser(default_config_files, git_root):
     group.add_argument(
         "--check-update",
         action=argparse.BooleanOptionalAction,
-        help="Check for new patch versions on launch",
+        help="Show available Patch updates on launch (checks cached for 24 hours; no auto-install)",
         default=True,
     )
     group.add_argument(

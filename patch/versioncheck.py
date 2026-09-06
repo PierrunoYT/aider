@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import packaging.version
@@ -26,15 +27,12 @@ def install_from_main_branch(io):
     )
 
 
-def install_upgrade(io, latest_version=None):
+def install_upgrade(io):
     """
     Install the latest version of patch from PyPI.
     """
 
-    if latest_version:
-        new_ver_text = f"Newer patch version v{latest_version} is available."
-    else:
-        new_ver_text = "Install latest version of patch?"
+    new_ver_text = "Install latest version of Patch?"
 
     docker_image = os.environ.get("PATCH_DOCKER_IMAGE")
     if docker_image:
@@ -62,42 +60,56 @@ def install_upgrade(io, latest_version=None):
 
 
 def check_version(io, just_check=False, verbose=False):
-    if not just_check and VERSION_CHECK_FNAME.exists():
-        day = 60 * 60 * 24
-        since = time.time() - os.path.getmtime(VERSION_CHECK_FNAME)
-        if 0 < since < day:
-            if verbose:
-                hours = since / 60 / 60
-                io.tool_output(f"Too soon to check version: {hours:.1f} hours")
-            return
+    latest_version = None
+    if not just_check:
+        try:
+            since = time.time() - VERSION_CHECK_FNAME.stat().st_mtime
+            if 0 <= since < 24 * 60 * 60:
+                latest_version = str(
+                    packaging.version.Version(VERSION_CHECK_FNAME.read_text().strip())
+                )
+        except (OSError, ValueError):
+            # Also handles the empty timestamp-only cache used by older versions.
+            pass
 
-    # To keep startup fast, avoid importing this unless needed
-    import requests
+    if latest_version is None:
+        # To keep startup fast, avoid importing this unless needed.
+        import requests
 
+        try:
+            response = requests.get("https://pypi.org/pypi/patch-code/json", timeout=3)
+            response.raise_for_status()
+            latest_version = str(packaging.version.Version(response.json()["info"]["version"]))
+        except (requests.RequestException, ValueError, KeyError, TypeError) as err:
+            if just_check or verbose:
+                io.tool_error(f"Unable to check for Patch updates: {err}")
+            return False
+
+        try:
+            VERSION_CHECK_FNAME.parent.mkdir(parents=True, exist_ok=True)
+            VERSION_CHECK_FNAME.write_text(latest_version)
+        except OSError:
+            # A read-only cache must not prevent the notice or normal startup.
+            pass
+
+    # Compare the installed distribution, not the inherited upstream fallback version.
     try:
-        response = requests.get("https://pypi.org/pypi/patch-code/json")
-        data = response.json()
-        latest_version = data["info"]["version"]
+        current_version = version("patch-code")
+    except PackageNotFoundError:
         current_version = patch.__version__
 
-        if just_check or verbose:
-            io.tool_output(f"Current version: {current_version}")
-            io.tool_output(f"Latest version: {latest_version}")
-
+    try:
         is_update_available = packaging.version.parse(latest_version) > packaging.version.parse(
             current_version
         )
-    except Exception as err:
-        io.tool_error(f"Error checking pypi for new version: {err}")
+    except ValueError as err:
+        if just_check or verbose:
+            io.tool_error(f"Unable to compare Patch versions: {err}")
         return False
-    finally:
-        VERSION_CHECK_FNAME.parent.mkdir(parents=True, exist_ok=True)
-        VERSION_CHECK_FNAME.touch()
-
-    ###
-    # is_update_available = True
 
     if just_check or verbose:
+        io.tool_output(f"Current version: {current_version}")
+        io.tool_output(f"Latest version: {latest_version}")
         if is_update_available:
             io.tool_output("Update available")
         else:
@@ -109,5 +121,10 @@ def check_version(io, just_check=False, verbose=False):
     if not is_update_available:
         return False
 
-    install_upgrade(io, latest_version)
+    io.tool_warning(f"Patch update available: {current_version} → {latest_version}")
+    docker_image = os.environ.get("PATCH_DOCKER_IMAGE")
+    if docker_image:
+        io.tool_output(f"To update, run: docker pull {docker_image}")
+    else:
+        io.tool_output("To update, run: python -m patch --upgrade")
     return True
