@@ -2,15 +2,15 @@
 title: Release history
 nav_order: 925
 highlight_image: /assets/blame.jpg
-description: Release notes and stats on patch writing its own code.
+description: Inherited Aider release notes and Aider's own code-authorship stats.
 ---
 
 # Release history
 
-Patch writes most of its own code, usually about 70-80% of the new code in each release.
+Aider wrote most of its own code, usually about 70-80% of the new code in each release.
 These
-[statistics are based on the git commit history](/docs/faq.html#how-are-the-patch-wrote-xx-of-code-stats-computed)
-of the patch repo.
+[statistics are based on the git commit history](/docs/faq.html#how-are-the-aider-wrote-xx-of-code-stats-computed)
+of the upstream aider repo.
 
 {% include blame.md %}
 
@@ -24,8 +24,14 @@ cog.out(text)
 ]]]-->
 
 
+This is the release history inherited from upstream
+[Aider](https://github.com/Aider-AI/aider). The entries below describe Aider
+releases and Aider's own code-authorship statistics; they are not claims about
+Patch. Patch changes are recorded in [CHANGELOG.md](CHANGELOG.md).
+
 ### main branch
 
+- Expanded `ANTHROPIC_MODELS` list with Claude Opus 4.1/4.5/4.6/4.7 dated variants and Claude Sonnet 3.7 so the Anthropic API key auto-detection (`models.sanity_check_models`) recognises them.
 - Added support for Claude 4.5/4.6 models and updated model aliases (sonnet/haiku/opus).
 - Expanded Gemini model support with 2.5 Flash and Flash‑Lite, added Gemini 3 preview models, and updated the flash alias to gemini/gemini-flash-latest.
 - Added DeepSeek Reasoner model and updated DeepSeek model metadata with costs and prompt caching.
@@ -37,10 +43,10 @@ cog.out(text)
 - Changed the gemini alias to point to gemini/gemini-3-pro-preview.
 - Added support for OpenAI o1-pro model.
 - Added support for GPT‑5.3/5.4 model variants across OpenAI, Azure, and OpenRouter, plus GPT‑4.1‑nano.
-- Added `/ok` as a shortcut for asking patch to go ahead with the proposed changes, with optional extra instructions.
-- When auto-commits are disabled, patch can add files outside the git repo and promote read-only files to editable, by Chris McCormick.
+- Added `/ok` as a shortcut for asking aider to go ahead with the proposed changes, with optional extra instructions.
+- When auto-commits are disabled, aider can add files outside the git repo and promote read-only files to editable, by Chris McCormick.
 - Fixed crashes caused by circular symlink loops when resolving paths, by coder_3.
-- Patch wrote 62% of the code in this release.
+- Aider wrote 62% of the code in this release.
 
 ### Aider v0.86.1
 

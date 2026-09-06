@@ -21,6 +21,7 @@ For the inherited release history, see [the previous changelog](HISTORY.md).
 
 ### Fixed
 
+- Restored upstream Aider attribution in the inherited release history and FAQ. The rebrand had rewritten upstream entries to read as Patch achievements, including the per-release code-authorship percentages. `HISTORY.md` and its website copy now state that they are inherited Aider history, and the FAQ presents the authorship statistics and model-usage table as upstream data. Repaired two documentation links that pointed at a nonexistent `patch-ai/patch` repository and at a renamed upstream anchor.
 - Fixed Python 3.10 installation of the help and browser extras by generating dependency pins with Python and platform markers across the supported environments. Added regression checks for consistent pins across base and optional dependencies.
 - Fixed Black formatting in the release-history helper so pre-commit checks pass.
 - Included Python subpackages, model metadata and settings, tree-sitter queries, and help documentation in the built package.

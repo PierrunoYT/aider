@@ -234,18 +234,16 @@ When experimenting with coder backends, it helps to run patch with `--verbose --
 all the raw information being sent to/from the LLM in the conversation.
 
 You can also refer to the
-[instructions for installing a development version of patch](https://aider.chat/docs/install/optional.html#install-the-development-version-of-patch).
+[instructions for installing Patch from source](https://github.com/PierrunoYT/patch#install-from-source).
 
-## What LLMs do you use to build patch?
+## What LLMs were used to build aider?
 
-Patch writes a lot of its own code, usually about 70% of the new code in each
-release.
-People often ask which LLMs I use with patch, when writing patch.
-Below is a table showing the models I have used recently,
-extracted from the 
-[public log](https://github.com/patch-ai/patch/blob/main/patch/website/assets/sample-analytics.jsonl)
-of my
-[patch analytics](https://aider.chat/docs/more/analytics.html).
+The table below is inherited from upstream Aider, which wrote a lot of its own
+code — usually about 70% of the new code in each release. It shows the models
+the upstream author used recently, extracted from the
+[sample analytics log](https://github.com/PierrunoYT/patch/blob/main/patch/website/assets/sample-analytics.jsonl)
+retained from upstream. It is not a record of Patch development or of any
+Patch user's activity.
 
 <!--[[[cog
 import sys
@@ -279,10 +277,13 @@ tr:hover { background-color: #f5f5f5; }
 </table>
 <!--[[[end]]]-->
 
-## How are the "patch wrote xx% of code" stats computed?
+## How are the "aider wrote xx% of code" stats computed?
+
+The percentages quoted in the [release history](/HISTORY.html) are inherited
+from upstream Aider and describe the upstream aider repo, not Patch.
 
 [Patch is tightly integrated with git](/docs/git.html) so all
-of patch's code changes are committed to the repo with proper attribution.
+of its code changes are committed to the repo with proper attribution.
 The 
 [stats are computed](https://github.com/PierrunoYT/patch/blob/main/scripts/blame.py)
 by doing something like `git blame` on the repo,
