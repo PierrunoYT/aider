@@ -211,6 +211,23 @@ Docker builds are manual; there are no automatic Docker or GitHub Pages deployme
 
 #### Preparing a release
 
+Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html). Changelog entries describe
+notable final behavior, not individual commits or intermediate fixes. Group entries
+under `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`, omitting
+empty categories. Keep `[Unreleased]` first, use `[X.Y.Z] - YYYY-MM-DD` headings,
+and maintain release and comparison links. Derive GitHub release notes from the
+corresponding changelog section.
+
+The compatibility surface is the documented CLI, configuration, and public Python
+interfaces. Stable versions use `MAJOR.MINOR.PATCH`: breaking changes increment
+MAJOR, backward-compatible features increment MINOR, and backward-compatible fixes
+increment PATCH. During `0.y.z` development, compatibility is not guaranteed;
+Patch uses MINOR bumps for features or breaking changes and PATCH bumps for
+compatible fixes. Document breaking changes and migration steps explicitly.
+Do not modify or move published version tags; changes after a release belong under
+`Unreleased` until the next release. `1.0.0` will establish the stable public interface.
+
 `patch/__init__.py` is the single version source for the CLI and built package.
 Set the intended release version there, date the release section in `CHANGELOG.md`,
 and leave an `Unreleased` section for subsequent changes. Tags do not set the version.
