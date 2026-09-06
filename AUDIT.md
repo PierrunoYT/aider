@@ -6,13 +6,21 @@ This is a mature, feature-rich fork of Aider: an AI pair-programming CLI with Gi
 
 Strengths include a clear CLI entry point, understandable component boundaries, 489 test functions, deliberate confirmation around most model-proposed edits and commands, sensible repository-map caching, and no committed production credentials found.
 
-An independent Claude Opus 5 re-audit was reconciled into this report. It confirmed the path-move finding, disproved the original wheel-content finding, and identified additional high-priority trust-boundary and data-loss issues. The most important problems are now:
+An independent Claude Opus 5 re-audit was reconciled into this report. It confirmed the path-move finding, disproved the original wheel-content finding, and identified additional high-priority trust-boundary and data-loss issues. The most important remaining problems are:
 
-1. Repository-local `.patch.conf.yml` and `.env` files cross into command execution and provider configuration without a repository trust decision.
-2. A repository-local diskcache can deserialize attacker-supplied pickle data.
-3. Patch-format moves can overwrite arbitrary writable paths without destination authorization.
-4. Malformed whole-file and patch responses can be applied rather than rejected, risking silent data loss.
-5. The GUI shares privileged mutable state between browser sessions and is not safe to expose remotely.
+1. Patch-format moves can overwrite arbitrary writable paths without destination authorization.
+2. Malformed whole-file and patch responses can be applied rather than rejected, risking silent data loss.
+3. Model-originated paths are not contained to the project root.
+
+Three of the original five have since been fixed on `main`, each with regression
+tests, and their findings below carry the details:
+
+- Repository-local `.patch.conf.yml`, `.env`, and model settings no longer supply
+  the settings that run commands or steer API traffic; `--trust-repo-config` opts
+  a repository back in (issue #1348).
+- The repo map cache moved out of the repository and off pickle (issue #1349).
+- The GUI binds to loopback and gives each browser session its own state and coder
+  (issue #1352).
 
 Additional material risks include known-vulnerable dependencies, filesystem mutation during dry-run validation, incorrect accounting after partial edit failures, OAuth and voice resource leaks, and non-hermetic CI.
 
@@ -30,7 +38,7 @@ need verification and remediation.
 
 No confirmed Critical issues were found.
 
-### [High] Untrusted repository configuration reaches command execution and API routing
+### Resolved: [High] Untrusted repository configuration reaches command execution and API routing
 
 **Location:** `patch/main.py:43-57,360-381,464-477`; `patch/args.py:534-555`; `patch/linter.py:47-57`; `patch/run_cmd.py:62-73`
 
@@ -61,7 +69,7 @@ implemented.
 
 ---
 
-### [High] Repository-local repomap cache deserializes pickle data
+### Resolved: [High] Repository-local repomap cache deserializes pickle data
 
 **Location:** `patch/repomap.py:35-43,195-260`
 
@@ -130,7 +138,7 @@ Add regression tests for absolute paths, `../` traversal, symlinks, read-only fi
 
 ---
 
-### [High] GUI is unauthenticated, network-exposed, and shares privileged state
+### Resolved: [High] GUI is unauthenticated, network-exposed, and shares privileged state
 
 **Location:** `patch/main.py:233-268`; `patch/gui.py:51-89,328-369,464-495`
 
@@ -650,15 +658,15 @@ The highest-value structural improvement is a small explicit edit-plan boundary:
 - Application returning actual changed paths and failures.
 - Commit and lint driven only by the application result.
 
-The GUI must be treated as a separate trust boundary. A process-global mutable CLI object is unsuitable for a multi-session server.
+The GUI must be treated as a separate trust boundary. The process-global mutable CLI object it used to share is gone; each browser session owns its state and coder, and the server listens on loopback. Concurrency between sessions editing one repository is still undefined.
 
-Repository configuration and caches form a second architectural trust boundary that is currently implicit. Data committed by a repository must not be treated like trusted user-home configuration or deserialized executable state. Move these decisions into an explicit repository-trust service used by configuration, environment loading, caches, watcher automation, and future executable hooks.
+Repository configuration and caches form a second architectural trust boundary, now partly explicit: `main.py` distinguishes the user's own configuration from what a checkout supplies, and the tags cache is per user and no longer executable. The decision still lives in `main.py` rather than in a trust service that watcher automation and future executable hooks could share, and it is per invocation rather than a recorded per-repository decision.
 
 Typing is sparse and there is no mypy or Pyright configuration. Blanket annotation is unnecessary, but edit-plan/results, OAuth responses, model metadata, and configuration boundaries would benefit from dataclasses, `TypedDict`, or discriminated unions.
 
 ## Security Assessment
 
-The main exploitable concerns are the patch move authorization bypass and remotely reachable GUI. OAuth file permissions are a confirmed local credential risk.
+The main exploitable concern is the patch move authorization bypass. OAuth file permissions are a confirmed local credential risk. The GUI now binds to loopback and isolates browser sessions, but it still has no authentication and no URL-fetch restriction, so remote exposure remains unsupported rather than merely discouraged.
 
 No committed real API keys, passwords, or privileged tokens were found. Analytics identifiers appear to be ingestion identifiers, not privileged secrets.
 
@@ -675,21 +683,25 @@ Potential false positives explicitly rejected:
 The suite is broad and generally uses concrete assertions. Highest-value missing tests are:
 
 1. Patch move authorization and traversal/symlink cases.
-2. GUI session isolation and loopback binding.
-3. Wheel installation outside the checkout.
-4. Dry-run and declined-edit filesystem invariants.
-5. Accurate changed paths after partial application.
-6. Whole-file deletion in both affected formats.
-7. OAuth shutdown and key permissions.
-8. Voice cleanup on every exit path.
-9. HTTP timeout behavior.
-10. Concurrent GUI requests if multi-user operation remains supported.
+2. Wheel installation outside the checkout.
+3. Dry-run and declined-edit filesystem invariants.
+4. Accurate changed paths after partial application.
+5. Whole-file deletion in both affected formats.
+6. OAuth shutdown and key permissions.
+7. Voice cleanup on every exit path.
+8. HTTP timeout behavior.
+9. Concurrent GUI requests if multi-user operation remains supported.
 
-The Opus audit ran `tests/basic` in an isolated venv. With `NO_COLOR`, API-key variables, and ambient Git configuration scrubbed, the result was 471 passed, 5 failures caused by the orb having no audio device, 1 skipped, and 67 passing subtests. Without scrubbing, 45 tests failed because host environment and global Git commit-signing configuration leaked into tests. Add an autouse isolation fixture and skip or mock voice-device tests when no device exists.
+Added since: GUI session isolation and loopback binding
+(`tests/browser/test_browser.py`), repository-configuration trust
+(`tests/basic/test_main.py::TestRepoConfigTrust`), and tags cache location and
+deserialization (`tests/basic/test_repomap.py::TestTagsCache`).
+
+The Opus audit ran `tests/basic` in an isolated venv. With `NO_COLOR`, API-key variables, and ambient Git configuration scrubbed, the result was 471 passed, 5 failures caused by the orb having no audio device, 1 skipped, and 67 passing subtests. Without scrubbing, 45 tests failed because host environment and global Git commit-signing configuration leaked into tests. Since then `tests/conftest.py` keeps the tags cache out of the user's home for every test, and `TestMain` scrubs ambient provider credentials, which had been deciding model selection and sending a live OpenRouter tier request. Ambient Git configuration is still not isolated, and voice-device tests still fail without a device rather than skipping.
 
 Excluding the five improperly device-dependent voice tests produced 468 passed, 1 skipped, and 67 passing subtests. Coverage over that basic suite was 57% (10,882 statements, 4,716 missed). Security-critical `patch_coder.py` had 11% coverage and no tests instantiate PatchCoder; `gui.py` had 0%. Scrape, browser, help, version-check, watcher, onboarding, and other optional boundaries also have low coverage. Add parser fuzzing or property tests for editblock, unified-diff, and patch input.
 
-Coverage gaps newly confirmed by the re-audit include no complete PatchCoder ADD round trip, no required end-sentinel tests, no WholeFileCoder unterminated-fence test, weak history conservation assertions, and no repository-config trust tests. `benchmark/test_benchmark.py` is excluded by `pytest.ini` and CI.
+Coverage gaps newly confirmed by the re-audit include no complete PatchCoder ADD round trip, no required end-sentinel tests, no WholeFileCoder unterminated-fence test, and weak history conservation assertions. Repository-config trust and GUI binding and isolation are now covered. `benchmark/test_benchmark.py` is excluded by `pytest.ini` and CI.
 
 Live network and installer tests should not run in the default unit suite.
 
@@ -697,7 +709,7 @@ Live network and installer tests should not run in the default unit suite.
 
 No confirmed major algorithmic performance defect was found. `RepoMap` performs expensive parsing, graph construction, and PageRank, but uses disk caching and token budgets. Full tracked-file scans and NetworkX ranking are reasonable profiling targets for very large repositories, not rewrite candidates without measurements.
 
-Other profiling targets are large retained command output, unbounded scraped page content, and concurrent use of a globally shared GUI coder. Correctness and trust-boundary fixes should come first.
+Other profiling targets are large retained command output and unbounded scraped page content. The GUI no longer shares one coder between sessions; each session now builds its own, which costs a startup rather than sharing mutable state. Correctness and trust-boundary fixes should come first.
 
 ## Dependency Assessment
 
@@ -725,11 +737,11 @@ a fresh security scan is still required.
 
 ### Phase 1 — Immediate fixes
 
-- Gate repository-local config and environment settings in `main.py` and `args.py` behind an explicit trust decision.
-- Move and safely serialize the tag cache in `repomap.py`.
+- Completed: gate repository-local config and environment settings in `main.py` and `args.py` behind an explicit trust decision.
+- Completed: move and safely serialize the tag cache in `repomap.py`.
+- Completed: bind and isolate the GUI in `main.py` and `gui.py`.
 - Root-contain model-originated paths in `base_coder.py` while preserving explicitly user-added external files; separately authorize patch destinations in `patch_coder.py`.
 - Redact `--api-key`, `--set-env`, environment-derived secrets, and raw command lines before writing settings or history.
-- Bind and isolate the GUI in `main.py` and `gui.py`.
 - Reject unterminated whole-file blocks and patches before mutation.
 - Upgrade reachable vulnerable dependencies and regenerate constraints.
 
@@ -750,9 +762,9 @@ a fresh security scan is still required.
 
 - Add a small typed edit-action/result contract shared by `base_coder.py` and edit subclasses.
 - Centralize affected-path authorization without changing supported file semantics.
-- Define per-session GUI ownership and concurrency rules.
+- Define GUI concurrency rules; per-session ownership of state and coder is in place.
 - Separate model parsing, policy validation, and filesystem execution.
-- Define repository-supplied configuration/cache/watch inputs as an explicit untrusted boundary.
+- Define repository-supplied watch inputs as an explicit untrusted boundary; configuration and cache inputs now are.
 
 ### Phase 4 — Cleanup
 
@@ -767,15 +779,15 @@ a fresh security scan is still required.
 
 Ranked by impact and likelihood relative to effort:
 
-| Rank | Action | Impact | Likelihood | Effort |
-|---:|---|---|---|---|
-| 1 | Gate repository `.patch.conf.yml` and `.env` behind trust | High | High | Medium |
-| 2 | Root-contain model-originated edits and authorize PatchCoder destinations | High | High | Low–Medium |
-| 3 | Move repomap cache out of repositories and remove pickle | High | Medium | Medium |
-| 4 | Reject truncated model edits and make writes atomic | High | Medium | Medium |
-| 5 | Redact all CLI/settings secrets before history logging | High | Medium | Low |
-| 6 | Stop tests installing packages; isolate environment and Git config | Medium | High | Low–Medium |
-| 7 | Upgrade/audit dependencies and separate published ranges from locks | High | Medium | Medium |
-| 8 | Preserve every message during history summarization | Medium | High at context limits | Medium |
-| 9 | Bind/isolate the GUI and secure OAuth local state | High | Medium | Medium |
-| 10 | Repair PatchCoder ADD, dry-run, partial-result, and empty-file behavior | High | Medium | Medium |
+| Rank | Action | Impact | Likelihood | Effort | Status |
+|---:|---|---|---|---|---|
+| 1 | Gate repository `.patch.conf.yml` and `.env` behind trust | High | High | Medium | Done |
+| 2 | Root-contain model-originated edits and authorize PatchCoder destinations | High | High | Low–Medium | Open |
+| 3 | Move repomap cache out of repositories and remove pickle | High | Medium | Medium | Done |
+| 4 | Reject truncated model edits and make writes atomic | High | Medium | Medium | Open |
+| 5 | Redact all CLI/settings secrets before history logging | High | Medium | Low | Open |
+| 6 | Stop tests installing packages; isolate environment and Git config | Medium | High | Low–Medium | Partial: provider credentials and the tags cache are isolated |
+| 7 | Upgrade/audit dependencies and separate published ranges from locks | High | Medium | Medium | Open |
+| 8 | Preserve every message during history summarization | Medium | High at context limits | Medium | Open |
+| 9 | Bind/isolate the GUI and secure OAuth local state | High | Medium | Medium | Partial: GUI done, OAuth open |
+| 10 | Repair PatchCoder ADD, dry-run, partial-result, and empty-file behavior | High | Medium | Medium | Open |
