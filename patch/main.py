@@ -15,12 +15,17 @@ except ImportError:
 
 import importlib_resources
 import shtab
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 from prompt_toolkit.enums import EditingMode
 
 from patch import __version__, models, urls, utils
 from patch.analytics import Analytics
-from patch.args import get_parser
+from patch.args import (
+    DEFAULT_MODEL_METADATA_FILE,
+    DEFAULT_MODEL_SETTINGS_FILE,
+    default_env_file,
+    get_parser,
+)
 from patch.coders import Coder
 from patch.coders.base_coder import UnknownEditFormat
 from patch.commands import Commands, SwitchCoder
@@ -38,6 +43,197 @@ from patch.versioncheck import check_version, install_from_main_branch, install_
 from patch.watch import FileWatcher
 
 from .dump import dump  # noqa: F401
+
+# A checked out repository carries its own .patch.conf.yml and .env, so those
+# files say whatever the author of the repository wants. These settings run
+# commands, move credentials or API traffic, or write outside the repository,
+# so Patch takes them from the user's own configuration only, unless the user
+# trusts the repository with --trust-repo-config.
+UNTRUSTED_REPO_SETTINGS = frozenset(
+    {
+        # Runs commands
+        "lint_cmd",
+        "test_cmd",
+        "editor",
+        "notifications_command",
+        "git_commit_verify",
+        "load",
+        "upgrade",
+        "install_main_branch",
+        # Credentials and API routing
+        "api_key",
+        "openai_api_key",
+        "anthropic_api_key",
+        "openai_api_base",
+        "openai_api_type",
+        "openai_api_version",
+        "openai_api_deployment_id",
+        "openai_organization_id",
+        "set_env",
+        "verify_ssl",
+        "env_file",
+        "model_settings_file",
+        # Telemetry destinations
+        "analytics",
+        "analytics_log",
+        "analytics_posthog_host",
+        "analytics_posthog_project_api_key",
+        # Files Patch writes, which can point outside the repository
+        "input_history_file",
+        "chat_history_file",
+        "llm_history_file",
+        # Approvals, and the trust decision itself
+        "yes_always",
+        "trust_repo_config",
+    }
+)
+
+# Environment variables a repository .env may not set, for the same reasons.
+# Everything else in a repository .env is loaded, including the variables its
+# own tooling needs, so the lists stay specific to what redirects Patch.
+UNTRUSTED_ENV_NAMES = frozenset(
+    {
+        "PATH",
+        "BASH_ENV",
+        "ENV",
+        "ZDOTDIR",
+        "EDITOR",
+        "VISUAL",
+        "PAGER",
+        "SHELL",
+        "BROWSER",
+        "NODE_OPTIONS",
+        "OLLAMA_HOST",
+        "SSL_VERIFY",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+        "REQUESTS_CA_BUNDLE",
+        "CURL_CA_BUNDLE",
+    }
+)
+UNTRUSTED_ENV_PREFIXES = ("GIT_", "LD_", "DYLD_", "PYTHON")
+UNTRUSTED_ENV_SUFFIXES = (
+    "_API_BASE",
+    "_BASE_URL",
+    "_API_VERSION",
+    "_ENDPOINT",
+    "_ENDPOINT_URL",
+    "_PROXY",
+    "_CA_BUNDLE",
+    "_ORGANIZATION",
+)
+
+# PATCH_LINT_CMD and friends reach the parser through auto_env_var_prefix, so
+# they are exactly as dangerous as the config keys they stand for. The rest of
+# the PATCH_ variables are ordinary settings.
+UNTRUSTED_ENV_SETTINGS = frozenset(f"PATCH_{dest.upper()}" for dest in UNTRUSTED_REPO_SETTINGS)
+
+CONFIG_FILE_SOURCE_PREFIX = "config_file"
+
+
+def is_untrusted_env_name(name):
+    """True for variables a repository .env must not be able to set."""
+
+    name = name.upper()
+
+    return (
+        name in UNTRUSTED_ENV_NAMES
+        or name in UNTRUSTED_ENV_SETTINGS
+        or name.startswith(UNTRUSTED_ENV_PREFIXES)
+        or name.endswith(UNTRUSTED_ENV_SUFFIXES)
+    )
+
+
+def untrusted_default_path(fname, default, trust_repo_config):
+    """Drop a path only because it is the default, which points into the repo.
+
+    A path the user named is theirs, wherever it points.
+    """
+
+    if trust_repo_config or fname != default:
+        return fname
+
+    return None
+
+
+def resolve_path(fname):
+    try:
+        return str(Path(fname).resolve())
+    except OSError:
+        return str(Path(os.path.abspath(fname)))
+
+
+def get_explicit_config_file(argv):
+    """The --config file the user named, which is as trusted as they are."""
+
+    for num, arg in enumerate(argv):
+        if arg in ("-c", "--config"):
+            if num + 1 < len(argv):
+                return argv[num + 1]
+        elif arg.startswith("--config="):
+            return arg.split("=", 1)[1]
+        elif arg.startswith("-c=") or (arg.startswith("-c") and len(arg) > 2):
+            return arg[3:] if arg.startswith("-c=") else arg[2:]
+
+    return os.environ.get("PATCH_CONFIG")
+
+
+def get_trusted_config_files(config_files, argv):
+    """The config files that came from the user, not from the repository."""
+
+    trusted = {resolve_path(Path.home() / ".patch.conf.yml")}
+
+    explicit = get_explicit_config_file(argv)
+    if explicit:
+        trusted.add(resolve_path(explicit))
+
+    return [fname for fname in config_files if resolve_path(fname) in trusted]
+
+
+def get_repo_config_settings(parser, trusted_config_files):
+    """Gated settings that a repository config file supplied, and where from."""
+
+    trusted = {resolve_path(fname) for fname in trusted_config_files}
+
+    found = dict()
+    for source, settings in parser.get_source_to_settings_dict().items():
+        if not source.startswith(CONFIG_FILE_SOURCE_PREFIX):
+            continue
+
+        fname = source.split("|", 1)[-1]
+        if resolve_path(fname) in trusted:
+            continue
+
+        for key, value in settings.items():
+            action = value[0]
+            dest = action.dest if action else key.lstrip("-").replace("-", "_")
+            if dest in UNTRUSTED_REPO_SETTINGS:
+                found.setdefault(dest, set()).add(fname)
+
+    return found
+
+
+def drop_repo_config_settings(parser, args, argv, git_root, trusted_config_files):
+    """Fall back to the user's own value for anything a repository config set.
+
+    Returns the settings that were dropped, so the caller can report them.
+    """
+
+    dropped = get_repo_config_settings(parser, trusted_config_files)
+    if not dropped:
+        return dropped
+
+    trusted_parser = get_parser(trusted_config_files, git_root)
+    trusted_args, _ = trusted_parser.parse_known_args(argv)
+
+    if trusted_args.trust_repo_config:
+        # The user trusts this repository, so keep everything it configured.
+        return dict()
+
+    for dest in dropped:
+        setattr(args, dest, getattr(trusted_args, dest))
+
+    return dropped
 
 
 def check_config_files_for_yes(config_files):
@@ -332,12 +528,13 @@ def parse_lint_cmds(lint_cmds, io):
     return res
 
 
-def generate_search_path_list(default_file, git_root, command_line_file):
+def generate_search_path_list(default_file, git_root, command_line_file, repo_files=True):
     files = []
     files.append(Path.home() / default_file)  # homedir
-    if git_root:
-        files.append(Path(git_root) / default_file)  # git root
-    files.append(default_file)
+    if repo_files:
+        if git_root:
+            files.append(Path(git_root) / default_file)  # git root
+        files.append(default_file)
     if command_line_file:
         files.append(command_line_file)
 
@@ -362,9 +559,14 @@ def generate_search_path_list(default_file, git_root, command_line_file):
     return files
 
 
-def register_models(git_root, model_settings_fname, io, verbose=False):
+def register_models(git_root, model_settings_fname, io, verbose=False, trust_repo_config=False):
     model_settings_files = generate_search_path_list(
-        ".patch.model.settings.yml", git_root, model_settings_fname
+        DEFAULT_MODEL_SETTINGS_FILE,
+        git_root,
+        untrusted_default_path(
+            model_settings_fname, DEFAULT_MODEL_SETTINGS_FILE, trust_repo_config
+        ),
+        repo_files=trust_repo_config,
     )
 
     try:
@@ -388,7 +590,31 @@ def register_models(git_root, model_settings_fname, io, verbose=False):
     return None
 
 
-def load_dotenv_files(git_root, dotenv_fname, encoding="utf-8"):
+def load_untrusted_dotenv(fname, encoding="utf-8"):
+    """Load a repository .env, skipping variables that redirect Patch.
+
+    Returns the names of the variables that were skipped.
+    """
+
+    values = dotenv_values(fname, encoding=encoding)
+
+    skipped = []
+    for name, value in values.items():
+        if is_untrusted_env_name(name):
+            skipped.append(name)
+        elif value is not None:
+            os.environ[name] = value
+
+    return skipped
+
+
+def load_dotenv_files(git_root, dotenv_fname, encoding="utf-8", trusted_files=None):
+    """Load the .env files, filtering the ones the repository supplies.
+
+    `trusted_files` names the files to load as-is, on top of the user's own home
+    files. Pass None to trust every file, which is what --trust-repo-config does.
+    """
+
     # Standard .env file search path
     dotenv_files = generate_search_path_list(
         ".env",
@@ -404,12 +630,28 @@ def load_dotenv_files(git_root, dotenv_fname, encoding="utf-8"):
         # Remove duplicates if it somehow got included by generate_search_path_list
         dotenv_files = list(dict.fromkeys(dotenv_files))
 
+    trusted = None
+    if trusted_files is not None:
+        trusted = {resolve_path(oauth_keys_file), resolve_path(Path.home() / ".env")}
+        trusted.update(resolve_path(fname) for fname in trusted_files)
+
     loaded = []
     for fname in dotenv_files:
         try:
-            if Path(fname).exists():
+            if not Path(fname).exists():
+                continue
+
+            if trusted is None or resolve_path(fname) in trusted:
                 load_dotenv(fname, override=True, encoding=encoding)
-                loaded.append(fname)
+            else:
+                skipped = load_untrusted_dotenv(fname, encoding=encoding)
+                if skipped:
+                    print(
+                        f"Ignoring {', '.join(sorted(skipped))} from {fname}, which the"
+                        " repository supplies. Use --trust-repo-config to load them."
+                    )
+
+            loaded.append(fname)
         except OSError as e:
             print(f"OSError loading {fname}: {e}")
         except Exception as e:
@@ -424,8 +666,10 @@ def register_litellm_models(git_root, model_metadata_fname, io, verbose=False):
     resource_metadata = importlib_resources.files("patch.resources").joinpath("model-metadata.json")
     model_metadata_files.append(str(resource_metadata))
 
+    # Context windows and costs describe a model, they do not route requests, so
+    # a repository may still supply them.
     model_metadata_files += generate_search_path_list(
-        ".patch.model.metadata.json", git_root, model_metadata_fname
+        DEFAULT_MODEL_METADATA_FILE, git_root, model_metadata_fname
     )
 
     try:
@@ -527,11 +771,31 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
 
     args, unknown = parser.parse_known_args(argv)
 
+    # The repository may have supplied the config file we just read, so decide
+    # what it is allowed to set before acting on any of it.
+    trusted_config_files = get_trusted_config_files(default_config_files, argv)
+    dropped_repo_settings = drop_repo_config_settings(
+        parser, args, argv, git_root, trusted_config_files
+    )
+
+    trusted_env_files = None
+    if not args.trust_repo_config:
+        # The default .env sits in the repository; a path the user asked for does not.
+        trusted_env_files = []
+        if args.env_file and args.env_file != default_env_file(git_root):
+            trusted_env_files.append(args.env_file)
+
     # Load the .env file specified in the arguments
-    loaded_dotenvs = load_dotenv_files(git_root, args.env_file, args.encoding)
+    loaded_dotenvs = load_dotenv_files(
+        git_root, args.env_file, args.encoding, trusted_files=trusted_env_files
+    )
 
     # Parse again to include any arguments that might have been defined in .env
     args = parser.parse_args(argv)
+
+    dropped_repo_settings.update(
+        drop_repo_config_settings(parser, args, argv, git_root, trusted_config_files)
+    )
 
     if args.shell_completions:
         # Ensure parser.prog is set for shtab, though it should be by default
@@ -615,6 +879,12 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
             raise err
         io = get_io(False)
         io.tool_warning("Terminal does not support pretty output (UnicodeDecodeError)")
+
+    if dropped_repo_settings:
+        names = ", ".join(sorted(dest.replace("_", "-") for dest in dropped_repo_settings))
+        files = sorted({fname for fnames in dropped_repo_settings.values() for fname in fnames})
+        io.tool_warning(f"Ignoring {names} from {', '.join(files)}, which the repository supplies.")
+        io.tool_output("Run with --trust-repo-config to use that repository's settings.")
 
     # Process any environment variables set via --set-env
     if args.set_env:
@@ -783,7 +1053,13 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
     is_first_run = is_first_run_of_new_version(io, verbose=args.verbose)
     check_and_load_imports(io, is_first_run, verbose=args.verbose)
 
-    register_models(git_root, args.model_settings_file, io, verbose=args.verbose)
+    register_models(
+        git_root,
+        args.model_settings_file,
+        io,
+        verbose=args.verbose,
+        trust_repo_config=args.trust_repo_config,
+    )
     register_litellm_models(git_root, args.model_metadata_file, io, verbose=args.verbose)
 
     if args.list_models:

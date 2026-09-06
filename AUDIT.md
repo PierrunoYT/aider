@@ -42,6 +42,21 @@ No confirmed Critical issues were found.
 
 **Suggested test:** Load an untrusted repository config containing `lint-cmd` and a provider base URL; assert neither takes effect until trust is granted.
 
+**Status:** Resolved along the second recommendation. `main.py` now separates the
+user's own configuration (home files, `--config`/`--env-file` paths they name, the
+environment, the command line) from what a checkout supplies, and reverts every
+setting in `UNTRUSTED_REPO_SETTINGS` that a repository config provided, reporting
+what it ignored. A repository `.env` is loaded through `load_untrusted_dotenv()`,
+which skips only the variables that redirect Patch, and repository model settings
+files, whose `extra_params` can name an endpoint, are no longer searched. Model
+metadata, which only describes context windows and costs, is still read.
+`--trust-repo-config`, which a repository cannot set for itself, restores the old
+behavior.
+`tests/basic/test_main.py::TestRepoConfigTrust` covers the config, `.env`, model
+settings, home and command-line trust, and the self-granted trust case. The
+persistent per-repository trust record from the first recommendation was not
+implemented.
+
 **Confidence:** High
 
 ---

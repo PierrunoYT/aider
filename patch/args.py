@@ -28,6 +28,12 @@ def resolve_patchignore_path(path_str, git_root=None):
     return str(path)
 
 
+# These defaults name files inside the repository, so main.py only searches for
+# them when the user trusts the repository's configuration.
+DEFAULT_MODEL_SETTINGS_FILE = ".patch.model.settings.yml"
+DEFAULT_MODEL_METADATA_FILE = ".patch.model.metadata.json"
+
+
 def default_env_file(git_root):
     return os.path.join(git_root, ".env") if git_root else ".env"
 
@@ -121,13 +127,13 @@ def get_parser(default_config_files, git_root):
     group.add_argument(
         "--model-settings-file",
         metavar="MODEL_SETTINGS_FILE",
-        default=".patch.model.settings.yml",
+        default=DEFAULT_MODEL_SETTINGS_FILE,
         help="Specify a file with patch model settings for unknown models",
     ).complete = shtab.FILE
     group.add_argument(
         "--model-metadata-file",
         metavar="MODEL_METADATA_FILE",
-        default=".patch.model.metadata.json",
+        default=DEFAULT_MODEL_METADATA_FILE,
         help="Specify a file with context window and costs for unknown models",
     ).complete = shtab.FILE
     group.add_argument(
@@ -807,6 +813,16 @@ def get_parser(default_config_files, git_root):
         default=default_env_file(git_root),
         help="Specify the .env file to load (default: .env in git root)",
     ).complete = shtab.FILE
+    group.add_argument(
+        "--trust-repo-config",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Honor settings that run commands, move API traffic or write outside the repo"
+            " when the repository's own .patch.conf.yml or .env supplies them"
+            " (default: False)"
+        ),
+    )
     group.add_argument(
         "--suggest-shell-commands",
         action=argparse.BooleanOptionalAction,

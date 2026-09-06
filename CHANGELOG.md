@@ -17,6 +17,13 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Security
 
+- Ignore the settings in a repository's own `.patch.conf.yml`, `.env`, and model
+  settings files that run commands, carry credentials, steer API traffic, redirect
+  telemetry, write outside the repository, or answer prompts. Cloning a repository
+  and letting Patch edit a file no longer runs a command of the repository's
+  choosing or sends requests to an endpoint it names. The same settings still work
+  from your own configuration, and `--trust-repo-config` honors a repository you
+  trust.
 - Store the repo map tags cache in `~/.patch/caches/`, keyed by a hash of the
   repository path, instead of inside the repository, and read it as JSON that is
   validated before use. A repository can no longer ship a cache whose pickled

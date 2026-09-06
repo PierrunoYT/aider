@@ -15,6 +15,28 @@ dark-mode: true
 auto-commits: false
 ```
 
+## Repository configuration is untrusted
+
+A cloned repository ships its own `.patch.conf.yml`, `.env`, and
+`.patch.model.settings.yml`. Patch reads the ordinary settings from them, but
+ignores the ones that run commands
+(`lint-cmd`, `test-cmd`, `editor`, `notifications-command`, `load`, ...), carry
+credentials or steer API traffic (`api-key`, `openai-api-base`, `set-env`,
+`verify-ssl`, ...), redirect telemetry, write outside the repository
+(`chat-history-file`, ...), or answer prompts for you (`yes-always`). It says
+which settings it ignored. Repository model settings (`extra_params`, which can
+name an endpoint) are skipped for the same reason, while model metadata, which
+only describes context windows and costs, is still read. A repository `.env` is
+loaded the same way: variables that redirect Patch, such as `*_API_BASE`,
+`*_BASE_URL`, `PATCH_LINT_CMD` and the other `PATCH_*` names for the settings
+above, `GIT_*`, `PATH`, and proxy or TLS settings, are skipped. Everything else
+in it, including the variables your own tooling needs, is loaded as before.
+
+Those settings still work from your own `~/.patch.conf.yml`, `~/.env`, a
+`--config FILE` or `--env-file FILE` you name, the environment, and the command
+line. To honor a specific repository's own configuration, run it with
+`--trust-repo-config`.
+
 ## Environment and credentials
 
 Provider credentials retain their own names, such as `ANTHROPIC_API_KEY` and
@@ -23,9 +45,10 @@ Use `--env-file FILE` to select an environment file. YAML `api-key` entries and
 `--api-key provider=KEY` also support providers beyond OpenAI and Anthropic.
 `--set-env NAME=value` sets other provider variables.
 
-Review repository-local YAML and `.env` files before running Patch: they can
-configure executable commands and provider endpoints. Never load untrusted
-repository settings with credentials present.
+Review repository-local YAML and `.env` files before running Patch with
+`--trust-repo-config`: they can configure executable commands and provider
+endpoints. Never trust an unreviewed repository's settings with credentials
+present.
 
 ## Linting and tests
 
