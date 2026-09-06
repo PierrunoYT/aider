@@ -34,8 +34,11 @@ python -m pip install 'patch-code[browser]'
 python -m patch --browser
 ```
 
-The experimental UI is intended for a trusted single user. Do not expose it to
-untrusted networks or share it with other users: it can edit files and run commands.
+The experimental UI is intended for a trusted single user. It listens on
+`127.0.0.1` only, and each browser session gets its own chat history and coder.
+Set `PATCH_GUI_ADDRESS` to listen on another address. Do not do that on an
+untrusted network: the UI has no authentication, and anyone who can reach it can
+edit files and run commands.
 
 ## Enable Playwright
 

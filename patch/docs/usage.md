@@ -45,3 +45,5 @@ in your editor. `/multiline-mode` toggles multiline input.
 `--watch-files` reacts to AI comment markers in source files. Only enable it in
 trusted projects: other local processes that write files can trigger model turns.
 The experimental `--browser` UI requires the [browser extra](install.md#browser-ui).
+It binds to `127.0.0.1` and has no authentication, so only override
+`PATCH_GUI_ADDRESS` on a network you trust.

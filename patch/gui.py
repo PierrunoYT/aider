@@ -15,7 +15,10 @@ from patch.scrape import Scraper, has_playwright
 
 
 class CaptureIO(InputOutput):
-    lines = []
+    def __init__(self, *args, **kwargs):
+        # Per instance, so browser sessions never share captured output.
+        self.lines = []
+        super().__init__(*args, **kwargs)
 
     def tool_output(self, msg, log_only=False):
         if not log_only:
@@ -48,9 +51,12 @@ def search(text=None):
     return results
 
 
-# Keep state as a resource, which survives browser reloads (since Coder does too)
+# Chat history, prompts and undo state live here. It is kept in st.session_state
+# so it belongs to a single browser session and is never shared with another one.
+# Reloading the browser therefore starts a fresh session.
 class State:
-    keys = set()
+    def __init__(self):
+        self.keys = set()
 
     def init(self, key, val=None):
         if key in self.keys:
@@ -61,13 +67,24 @@ class State:
         return True
 
 
-@st.cache_resource
 def get_state():
-    return State()
+    if "state" not in st.session_state:
+        st.session_state.state = State()
+
+    return st.session_state.state
 
 
-@st.cache_resource
 def get_coder():
+    # Each browser session gets its own Coder. Sharing one would leak chat
+    # history and files between sessions and let them corrupt each other's
+    # repository and undo state.
+    if "coder" not in st.session_state:
+        st.session_state.coder = create_coder()
+
+    return st.session_state.coder
+
+
+def create_coder():
     coder = cli_main(return_coder=True)
     if not isinstance(coder, Coder):
         raise ValueError(coder)

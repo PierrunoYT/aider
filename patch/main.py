@@ -230,6 +230,28 @@ def write_streamlit_credentials():
         print("Streamlit credentials already exist.")
 
 
+# The browser GUI has no authentication and can read and edit the repository,
+# so it listens on loopback only. Streamlit's own default (`server.address`
+# unset) binds every interface.
+GUI_DEFAULT_ADDRESS = "127.0.0.1"
+GUI_LOOPBACK_ADDRESSES = ("127.0.0.1", "::1", "localhost")
+
+
+def get_gui_address():
+    """Address the browser GUI listens on.
+
+    Defaults to loopback. Set PATCH_GUI_ADDRESS (or Streamlit's own
+    STREAMLIT_SERVER_ADDRESS) to deliberately listen elsewhere.
+    """
+
+    for env_var in ("PATCH_GUI_ADDRESS", "STREAMLIT_SERVER_ADDRESS"):
+        address = os.environ.get(env_var, "").strip()
+        if address:
+            return address
+
+    return GUI_DEFAULT_ADDRESS
+
+
 def launch_gui(args):
     from streamlit.web import cli
 
@@ -243,9 +265,17 @@ def launch_gui(args):
 
     target = gui.__file__
 
+    address = get_gui_address()
+    if address.lower() not in GUI_LOOPBACK_ADDRESSES:
+        print(
+            f"WARNING: the browser GUI will listen on {address}. It has no authentication and"
+            " can read and edit this repository, so anyone able to reach that address can use it."
+        )
+
     st_args = ["run", target]
 
     st_args += [
+        f"--server.address={address}",
         "--browser.gatherUsageStats=false",
         "--runner.magicEnabled=false",
         "--server.runOnSave=false",

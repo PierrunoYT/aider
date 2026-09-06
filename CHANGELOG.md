@@ -15,6 +15,14 @@ separately in [HISTORY.md](HISTORY.md).
 - Adopt Keep a Changelog formatting and document the Semantic Versioning policy
   for future releases.
 
+### Security
+
+- Bind the `--browser` GUI to `127.0.0.1` instead of every network interface, and
+  give each browser session its own state and coder so sessions can no longer read
+  or corrupt one another's chat history, files, and undo state. Set
+  `PATCH_GUI_ADDRESS` to listen elsewhere; Patch warns when that address is not
+  loopback.
+
 ### Fixed
 
 - Use a local HTTP fixture for scraper tests instead of a public site that can

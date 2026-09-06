@@ -134,6 +134,15 @@ st_args += [
 
 This addresses exposure but not session isolation.
 
+**Status:** Resolved. `launch_gui()` now passes `--server.address=127.0.0.1`,
+overridable through `PATCH_GUI_ADDRESS` or `STREAMLIT_SERVER_ADDRESS` and warned
+about when the address is not loopback. `State` and the `Coder` moved from
+`@st.cache_resource` to `st.session_state`, and the class-level `State.keys` and
+`CaptureIO.lines` became per-instance, so no state is shared between browser
+sessions. `tests/browser/test_browser.py` covers the binding and the isolation.
+Authentication and URL-fetch restrictions are still absent, so remote access
+remains unsupported.
+
 **Confidence:** High
 
 ---
