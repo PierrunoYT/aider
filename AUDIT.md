@@ -473,7 +473,7 @@ publishing has been removed; only an explicit manual dispatch can publish.
 
 ---
 
-### [Medium] PatchCoder ADD creates a placeholder and then rejects it
+### Resolved: [Medium] PatchCoder ADD creates a placeholder and then rejects it
 
 **Location:** `patch/coders/base_coder.py:2206-2224`; `patch/coders/patch_coder.py:550-580`
 
@@ -482,6 +482,14 @@ publishing has been removed; only an explicit manual dispatch can publish.
 **Impact:** Every PatchCoder ADD fails, leaves an empty file, and may stage/report the path even though requested content was never written.
 
 **Recommendation:** Separate authorization from file creation. The edit implementation should own creation after approval, or PatchCoder must recognize its own authorized zero-byte placeholder.
+
+**Status:** Resolved along the second recommendation. An ADD now only conflicts
+with a file that has content of its own, so the empty placeholder left by
+authorization is written over. Separating authorization from creation was not
+attempted: `editblock_coder.py` relies on the file existing before it computes the
+new content, so that change belongs with the edit-plan refactor in Phase 3.
+`tests/basic/test_patch_coder.py::TestPatchCoderAdd` covers a successful add and an
+add onto a file that already has content.
 
 **Confidence:** High
 

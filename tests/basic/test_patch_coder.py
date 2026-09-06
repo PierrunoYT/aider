@@ -121,6 +121,60 @@ class TestPatchCoderMoves(unittest.TestCase):
         self.assertFalse(source.exists())
 
 
+class TestPatchCoderAdd(unittest.TestCase):
+    """Adding a file has to survive the placeholder that authorizing it creates."""
+
+    def setUp(self):
+        self.GPT35 = Model("gpt-3.5-turbo")
+
+        self.original_cwd = os.getcwd()
+        self.tempdir = tempfile.mkdtemp()
+        os.chdir(self.tempdir)
+
+    def tearDown(self):
+        os.chdir(self.original_cwd)
+        shutil.rmtree(self.tempdir, ignore_errors=True)
+
+    def make_coder(self, fnames=None):
+        return PatchCoder(
+            main_model=self.GPT35,
+            io=InputOutput(yes=True),
+            fnames=fnames or [],
+            use_git=False,
+        )
+
+    def add_patch(self, path, content):
+        body = "\n".join(f"+{line}" for line in content.splitlines())
+
+        return f"""*** Begin Patch
+*** Add File: {path}
+{body}
+*** End Patch
+"""
+
+    def test_add_writes_the_file(self):
+        coder = self.make_coder()
+        coder.partial_response_content = self.add_patch("new.py", 'print("hello")\n')
+
+        edited = coder.apply_updates()
+
+        self.assertEqual(Path("new.py").read_text(), 'print("hello")\n')
+        self.assertEqual(edited, {"new.py"})
+        self.assertFalse(getattr(coder, "reflected_message", None))
+
+    def test_add_refuses_a_file_that_has_content(self):
+        existing = Path("existing.py")
+        existing.write_text("keep\n")
+
+        coder = self.make_coder(fnames=[str(existing)])
+        coder.partial_response_content = self.add_patch("existing.py", "replaced\n")
+
+        coder.apply_updates()
+
+        self.assertEqual(existing.read_text(), "keep\n")
+        self.assertIn("already exists", coder.reflected_message)
+
+
 class TestPatchCoderSentinels(unittest.TestCase):
     """A patch without both sentinels may have been cut off."""
 

@@ -55,6 +55,9 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Let the `patch` format add a file. Authorizing a new file creates an empty
+  placeholder, which the ADD action then rejected as an existing file, so every add
+  failed and left an empty file behind.
 - Apply an edit that empties a file instead of reporting it as a block that failed
   to match, which also stopped the `diff` format from trying the same edit against
   another file in the chat.

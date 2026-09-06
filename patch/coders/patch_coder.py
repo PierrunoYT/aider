@@ -594,8 +594,10 @@ class PatchCoder(Coder):
 
             try:
                 if action.type == ActionType.ADD:
-                    # Check existence *before* writing
-                    if path_obj.exists():
+                    # Check existence *before* writing. Authorizing a new file
+                    # creates an empty placeholder, so only a file with content
+                    # of its own is a real conflict.
+                    if path_obj.exists() and path_obj.stat().st_size:
                         raise DiffError(f"ADD Error: File already exists: {action.path}")
                     if action.new_content is None:
                         # Parser should ensure this doesn't happen
