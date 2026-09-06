@@ -191,12 +191,17 @@ pytest tests/basic/test_coder.py
 pytest tests/basic/test_coder.py::TestCoder::test_specific_case
 ```
 
-Tests should not depend on your machine. `tests/conftest.py` points
+Tests should not depend on your machine, or change it. `tests/conftest.py` points
 `PATCH_TAGS_CACHE_DIR` at a temporary directory so repo map caches stay out of
-`~/.patch/caches`, and the `main()` tests scrub provider credentials from the
-environment, which otherwise decide which model is selected. Ambient Git
-configuration is not isolated yet, so global commit signing or hooks can still
-affect results.
+`~/.patch/caches`, and fails any test that reaches the package installer. The
+`main()` tests scrub provider credentials from the environment, which otherwise
+decide which model is selected. Ambient Git configuration is not isolated yet, so
+global commit signing or hooks can still affect results.
+
+A plain `pytest` run stays on this machine: tests that reach a third-party service
+are marked `network` and deselected by default. Run them with `pytest -m network`,
+which is what CI does in a separate step. Tests that may install something are
+marked `installer`, which also exempts them from the installer guard.
 
 #### Continuous Integration
 
@@ -205,7 +210,10 @@ The project uses GitHub Actions for continuous integration. The testing workflow
 - `.github/workflows/ubuntu-tests.yml`: Runs tests on Ubuntu for Python 3.10 through 3.14.
 - `.github/workflows/windows-tests.yml`: Runs the same tests on Windows for the same Python versions.
 
-These workflows run on pushes and pull requests to `main`. They ignore README and
+Each workflow runs the hermetic suite, then the `network` tests, then builds the
+wheel and runs it from a fresh environment outside the checkout, so packaging
+failures are caught before a release. These workflows run on pushes and pull
+requests to `main`. They ignore README and
 inherited history changes, plus unrelated workflow files. Packaged-doc changes
 run tests. Both matrices currently cover Python 3.10–3.14; they install the base
 package and pytest, not every optional extra. Some browser and scraper tests use

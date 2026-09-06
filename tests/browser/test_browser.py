@@ -4,6 +4,8 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
+import pytest
+
 from patch.main import get_gui_address, launch_gui, main
 
 
@@ -15,6 +17,7 @@ class FakeSessionState(dict):
 
 
 class TestBrowser(unittest.TestCase):
+    @pytest.mark.installer
     @patch("patch.main.launch_gui")
     def test_browser_flag_imports_streamlit(self, mock_launch_gui):
         os.environ["PATCH_ANALYTICS"] = "false"

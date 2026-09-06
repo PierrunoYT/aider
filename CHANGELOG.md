@@ -60,6 +60,11 @@ separately in [HISTORY.md](HISTORY.md).
 
 ### Fixed
 
+- Keep the test suite from changing the machine it runs on. A plain `pytest` run
+  no longer reaches third-party sites or installs packages: tests that do are
+  marked `network` and `installer`, and a fixture fails any other test that tries
+  to install. CI runs the hermetic suite, the network tests, and the built wheel
+  from a fresh environment outside the checkout.
 - Summarize the whole chat history instead of only the part that fit in one
   request. Messages between the summarized slice and the retained tail were
   dropped without a word, and the slice was taken from the oldest end, so the

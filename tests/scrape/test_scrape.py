@@ -4,6 +4,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 from unittest.mock import MagicMock
 
+import pytest
+
 from patch.commands import Commands
 from patch.io import InputOutput
 from patch.scrape import Scraper
@@ -32,6 +34,7 @@ class TestScrape(unittest.TestCase):
         cls.addClassCleanup(server.shutdown)
         cls.url = f"http://127.0.0.1:{server.server_port}"
 
+    @pytest.mark.network
     def test_scrape_self_signed_ssl(self):
         def scrape_with_retries(scraper, url, max_retries=5, delay=0.5):
             for _ in range(max_retries):
@@ -62,6 +65,7 @@ class TestScrape(unittest.TestCase):
         self.io = InputOutput(yes=True)
         self.commands = Commands(self.io, None)
 
+    @pytest.mark.installer
     def test_cmd_web_imports_playwright(self):
         # Create a mock print_error function
         mock_print_error = MagicMock()

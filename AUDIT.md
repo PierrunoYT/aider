@@ -473,7 +473,7 @@ output, while still being masked in the settings listing.
 
 ---
 
-### [Medium] CI is non-hermetic and does not test the release artifact
+### Partially resolved: [Medium] CI is non-hermetic and does not test the release artifact
 
 **Location:** `pytest.ini`; `.github/workflows/ubuntu-tests.yml`; `.github/workflows/windows-tests.yml`; `tests/scrape/test_scrape.py`; `tests/basic/test_ssl_verification.py`
 
@@ -482,6 +482,19 @@ output, while still being masked in the settings listing.
 **Impact:** Plain `pytest` can mutate a developer or CI environment, download hundreds of megabytes, and depend on PyPI, external websites, Hugging Face, and the PyTorch index. The use of `--extra-index-url` merges indexes and increases dependency-confusion exposure. CI also misses artifact-only failures.
 
 **Recommendation:** Patch `run_install` or `check_for_dependencies` in affected tests, give mocks concrete model names, and add an autouse fixture that fails on attempted installation. Separate `unit`, `integration`, `network`, and `installer` tests, mock HTTP in unit tests, use a single intended package index for CPU wheels, and test the wheel outside the checkout.
+
+**Status:** Mostly resolved. `tests/conftest.py` has an autouse fixture that fails
+any test which reaches `run_install`, the mocked model in
+`test_ssl_verification.py` has a concrete name so it no longer looks like a
+Bedrock model and asks to install boto3, and the `network` and `installer` markers
+separate the tests that leave the machine or touch the environment. The default
+`pytest` run is now hermetic: `addopts` deselects `network`, and the scraper tests
+that used to fetch third-party pages use a local HTTP server. CI runs the hermetic
+suite, then the network subset, then installs the built wheel into a fresh
+environment outside the checkout and runs it.
+Still open: the CPU wheel installs use `--extra-index-url`, which merges indexes.
+Scoping torch to its own index needs a separate change to the Docker build and the
+install instructions.
 
 **Status:** Help tests now mock embedding and model boundaries, and documentation
 URL tests validate retained files and anchors locally. They no longer install

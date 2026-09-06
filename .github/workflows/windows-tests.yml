@@ -51,4 +51,24 @@ jobs:
         PATCH_ANALYTICS: false
       run: |
         pytest
+
+    - name: Run the tests that reach the network
+      env:
+        PATCH_ANALYTICS: false
+      run: |
+        pytest -m network
+
+    - name: Test the built wheel outside the checkout
+      shell: pwsh
+      run: |
+        python -m pip install build
+        python -m build --wheel --outdir "$env:RUNNER_TEMP/dist" .
+        python -m venv "$env:RUNNER_TEMP/wheel-venv"
+        $python = "$env:RUNNER_TEMP/wheel-venv/Scripts/python.exe"
+        & $python -m pip install --upgrade pip
+        $wheel = (Get-ChildItem "$env:RUNNER_TEMP/dist/*.whl")[0].FullName
+        & $python -m pip install -c requirements.txt $wheel
+        Set-Location $env:RUNNER_TEMP
+        & $python -m patch --version
+        & $python -m patch --exit --yes --no-git --no-check-update
         
